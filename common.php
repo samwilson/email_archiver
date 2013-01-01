@@ -3,7 +3,7 @@ require_once 'config.php';
 
 // Don't report errors over which we have no control.
 $old_error_reporting = error_reporting();
-error_reporting(0);
+error_reporting(E_WARNING);
 require_once 'MDB2.php';
 require_once 'Auth.php';
 require_once 'HTML/Page2.php';

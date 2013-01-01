@@ -59,7 +59,7 @@ foreach ($ppl as $person) {
 if (count($years) > 0) {
     $page->addBodyContent("<p class='centre'>LaTeX: | ");
     foreach ($years as $y) {
-        $page->addBodyContent(" <a href='emails_latex.php?year=$y' title='$y.tex'>$y</a> | ");
+        $page->addBodyContent(" <a href='latex.php?year=$y' title='$y.tex'>$y</a> | ");
     }
     $page->addBodyContent("</p>");
 
@@ -69,13 +69,13 @@ if (count($years) > 0) {
     }
     $page->addBodyContent("</p>");
 
-    $form = new HTML_QuickForm('','post',$_SERVER['PHP_SELF'].'#reply-form');
+    $form = new HTML_QuickForm('','get',$_SERVER['PHP_SELF'].'#reply-form');
     $form->setDefaults(array('year'=>$year, 'with'=>$with));
     $form->addElement('header',null,$db->numRows('emails').' emails in archive');
     $group = array(
         new HTML_QuickForm_select('with','With',$people),
         new HTML_QuickForm_select('year','Year',$years),
-        new HTML_QuickForm_submit('change_with','View')
+        new HTML_QuickForm_submit(null, 'View')
     );
     $form->addGroup($group, null, null);
     $page->addBodyContent($form);
