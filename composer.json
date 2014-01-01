@@ -1,0 +1,17 @@
+{
+    "name": "samwilson/email_archiver",
+    "description": "A simple (and probably useless to most people) system for archiving plain-text emails and producing annual LaTeX-formatted concatenations of same.",
+    "license": "GPL-3.0+",
+    "authors": [
+        {
+            "name": "Sam Wilson",
+            "email": "sam@samwilson.id.au",
+            "role": "developer"
+        }
+    ],
+    "require": {
+        "swiftmailer/swiftmailer": "v5.0.3"
+    },
+    "require-dev": {
+    }
+}

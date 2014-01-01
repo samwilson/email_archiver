@@ -2,52 +2,87 @@
 require_once 'common.php';
 
 $page->setTitle("Emails");
-$css->parseString("div.email {background-color:#eee; margin:1em; padding:1em}");
-if (!empty($_REQUEST['with'])) $with = $_REQUEST['with']; else $with = 0;
-if (!empty($_REQUEST['year'])) $year = $_REQUEST['year']; else $year = 0;
 
-$mainUser = $db->fetchRow('SELECT * FROM people WHERE id = '.MAIN_USER_ID);
+if (!empty($_REQUEST['with'])) $with = $_REQUEST['with']; else $with = false;
+if (!empty($_REQUEST['year'])) $year = $_REQUEST['year']; else $year = false;
+
+$mainUser = $db->query('SELECT * FROM people WHERE id = '.MAIN_USER_ID);
+$mainUser = $mainUser->fetch();
+
+$sql = 'SELECT id, name, email_address FROM people WHERE id = :id';
+$to = $db->prepare($sql);
+$to->execute(array(':id' => $with));
+$to = $to->fetch();
 
 /*******************************************************************************
  * Send reply and save to DB.
  ******************************************************************************/
-if (isset($_POST['save']) && $_POST['save']=='Send') {
+if (isset($_POST['send'])) {
     $body = $_POST['message_body'];
     if (!empty($_POST['last_body'])) {
         $body .= "\n\n
-------------------------------------------------------------------------------
-Date: ".$_POST['last_date']."
-From: ".$_POST['to']."
-  To: ".$mainUser['name']." <".$mainUser['email_address'].">
-------------------------------------------------------------------------------
+------------------------------- Previous message -------------------------------
+-- Date: ".$_POST['last_date']."
+-- From: ".$to['name']." <".$to['email_address'].">
+--   To: ".$mainUser['name']." <".$mainUser['email_address'].">
+--------------------------------------------------------------------------------
 
 ".wordwrap($_POST['last_body'],78)."
 
-------------------------------------------------------------------------------
+--------------------------- End of previous message ----------------------------
 ";
     }
-    $headers = "From: ".$mainUser['name']." <".$mainUser['email_address'].">\r\n";
-    if (!mail($_POST['to'], $_POST['subject'], $body, $headers)) {
-        die("An error occured when sending the email.");
+
+    // Send the message
+	$message = Swift_Message::newInstance($_POST['subject'], $body)
+		->setFrom(array($mainUser['email_address'] => $mainUser['name']))
+		->setTo(array($to['email_address'] => $to['name']));
+	$transport = Swift_SmtpTransport::newInstance($mail_server['smtp_server'], $mail_server['smtp_port'])
+		->setUsername($_SESSION['username'].$mail_server['suffix'])
+		->setPassword($_SESSION['password']);
+	$mailer = Swift_Mailer::newInstance($transport);
+	$result = $mailer->send($message);
+	if (!$result) {
+		echo 'The mail could not be sent.';
+		exit(1);
+	}
+
+	// Save the message
+    $sql = 'INSERT INTO emails '
+		 . ' SET from_id=:from, to_id=:to, date_and_time=NOW(),'
+		 . ' subject=:subject, message_body=:message_body';
+    $insert = $db->prepare($sql);
+    $insert->bindParam(':from', $mainUser['id']);
+    $insert->bindParam(':to', $with);
+    $insert->bindParam(':subject', $_POST['subject']);
+    $insert->bindParam(':message_body', $_POST['message_body']);
+    if (!$insert->execute()) {
+		print_r($insert->errorInfo());
+		$exit(1);
     }
-    $db->save('emails', $_POST);
-    header("Location:".$_SERVER['PHP_SELF']."?with=".$_POST['to_id']."&year=$year#reply-form");
+
+    header("Location:".$_SERVER['PHP_SELF']."?with=$with&year=$year#reply-form");
 }
 
 /*******************************************************************************
  * Get years.
  ******************************************************************************/
 $years = array();
-$res = $db->fetchAll("SELECT YEAR(date_and_time) AS year FROM emails GROUP BY year");
-foreach ($res as $y) {
+$res = $db->query("SELECT YEAR(date_and_time) AS year FROM emails GROUP BY year");
+$res->execute();
+foreach ($res->fetchAll() as $y) {
     $years[$y['year']] = $y['year'];
 }
+if (count($years)==0) {
+    $page->addBodyContent("<p>Nothing found.</p>");
+} 
 
 
 /*******************************************************************************
  * Get people
  ******************************************************************************/
-$ppl = $db->fetchAll("SELECT id, name FROM people ORDER BY name ASC");
+$ppl = $db->query("SELECT id, name FROM people ORDER BY name ASC")->fetchAll();
+$people = array();
 foreach ($ppl as $person) {
     $people[$person['id']] = $person['name'];
 }
@@ -56,54 +91,36 @@ foreach ($ppl as $person) {
 /*******************************************************************************
  * Navigation form stuff.
  ******************************************************************************/
-if (count($years) > 0) {
-    $page->addBodyContent("<p class='centre'>LaTeX: | ");
-    foreach ($years as $y) {
-        $page->addBodyContent(" <a href='emails_latex.php?year=$y' title='$y.tex'>$y</a> | ");
-    }
-    $page->addBodyContent("</p>");
+$email_count = $db->query('SELECT COUNT(*) FROM emails LIMIT 1')->fetchColumn();
+ob_start();
+require_once 'views/email_nav_form.php';
+$nav = ob_get_clean();
+$page->addBodyContent($nav);
 
-    $page->addBodyContent("<p class='centre'>Chronological: | ");
-    foreach ($years as $y) {
-        $page->addBodyContent(" <a href='?year=$y' title='$y.tex'>$y</a> | ");
-    }
-    $page->addBodyContent("</p>");
-
-    $form = new HTML_QuickForm('','post',$_SERVER['PHP_SELF'].'#reply-form');
-    $form->setDefaults(array('year'=>$year, 'with'=>$with));
-    $form->addElement('header',null,$db->numRows('emails').' emails in archive');
-    $group = array(
-        new HTML_QuickForm_select('with','With',$people),
-        new HTML_QuickForm_select('year','Year',$years),
-        new HTML_QuickForm_submit('change_with','View')
-    );
-    $form->addGroup($group, null, null);
-    $page->addBodyContent($form);
-}
 
 /*******************************************************************************
  * list emails
  ******************************************************************************/
 
 if ($year || $with) {
-    $css->parseString("
-		.email {text-align:left; border:2px solid #CCC}
-		.email.from-me {border:2px solid #060}
-		.from {color:#CCC;font-variant:small-caps}
-		.from.from-me {color:#060}
-	");
 
-    $sql = "SELECT * FROM emails WHERE YEAR(date_and_time)=".$db->esc($year)." ";
-    if ($with) $sql .= "AND (to_id = ".$db->esc($with)." OR from_id = ".$db->esc($with).") ";
+    $sql = "SELECT * FROM emails WHERE YEAR(date_and_time)=:year ";
+    $params = array(':year'=>$year);
+    if ($with) {
+        $sql .= "AND (to_id = :with OR from_id = :with) ";
+        $params[':with'] = $with;
+    }
     $sql .= "ORDER BY date_and_time ASC";
 
-    $emails = $db->fetchAll($sql);
+    $emails = $db->prepare($sql);
+    $emails->execute($params);
+    $emails = $emails->fetchAll();
     $last_subject = '';
     $last_body = '';
     $last_date = '';
     $last_from_id = '';
+    $page->addBodyContent("<p class='centre'>Showing ".count($emails)." emails.</p>");
     if (count($emails) > 0) {
-        $page->addBodyContent("<p class='centre'>Showing ".count($emails)." emails.</p>");
         foreach ($emails as $count=>$email) {
             $email_class = ($email['from_id']==MAIN_USER_ID) ? 'from-me' : '';
             $page->addBodyContent("<div class='email $email_class'><p>");
@@ -118,13 +135,13 @@ if ($year || $with) {
             }
             $page->addBodyContent(
                     date('l, F jS, g:iA',strtotime($email['date_and_time']))."
-				&nbsp;&nbsp;
-				<strong>".$email['subject']."</strong> &nbsp;&nbsp;
-				<!--span class='small quiet'>
-				  <a href='?table_name=emails&edit&id=".$email['id']."'>[e]</a>
-				  <del><a href='?table_name=emails&delete&id=".$email['id']."'>[d]</a></del>
-				</span-->
-				</p><pre>".trim(wordwrap(htmlentities($email['message_body']), 78))."</pre></div>");
+                    &nbsp;&nbsp;
+                    <strong>".$email['subject']."</strong> &nbsp;&nbsp;
+                    <!--span class='small quiet'>
+                      <a href='?table_name=emails&edit&id=".$email['id']."'>[e]</a>
+                      <del><a href='?table_name=emails&delete&id=".$email['id']."'>[d]</a></del>
+                    </span-->
+                    </p><pre>".trim(wordwrap(htmlentities($email['message_body']), 78))."</pre></div>");
             $last_subject = $email['subject'];
             $last_body = $email['message_body'];
             $last_date = $email['date_and_time'];
@@ -140,32 +157,24 @@ if ($year || $with) {
  ******************************************************************************/
 
 if ($with) {
-    $to = $db->getVar('people',$with,"CONCAT(name,' <',email_address,'>')");
-    $replyform = new HTML_QuickForm('', 'post', $_SERVER['PHP_SELF']);
-    $replyform->addElement('hidden', 'from_id', MAIN_USER_ID);
-    $replyform->addElement('hidden', 'to_id', $with);
-    $replyform->addElement('hidden', 'with', $with);
-    $replyform->addElement('hidden', 'year', $year);
-    $replyform->addElement('hidden', 'correspondent', $with);
-    if ($last_from_id != MAIN_USER_ID) {
-        $replyform->addElement('hidden','last_body',htmlentities($last_body));
-    }
-    $replyform->addElement('hidden','last_date',htmlentities($last_date));
-    $replyform->addElement('hidden','date_and_time',date('Y-m-d H:i:s'));
-    $replyform->addElement('header', null, 'Replying to ' . $to);
-    $replyform->addElement('text','to','To: ',array('value'=>$to, 'class'=>'span-10'));
-    if (stristr($last_subject,'re')===FALSE) {
-        $new_subject = 'Re: '.$last_subject;
+    //$sql = 'SELECT CONCAT(name," <",email_address,">") FROM people WHERE id = :id';
+    $sql = 'SELECT id, name, email_address FROM people WHERE id = :id';
+    //$to = $db->('people',$with,"CONCAT(name,' <',email_address,'>')");
+    $to = $db->prepare($sql);
+    $to->execute(array(':id'=>$with));
+    $to = $to->fetch(); // htmlentities($to->fetchColumn());
+
+    // Subject
+    if (stristr($last_subject,'re') === FALSE) {
+        $subject = 'Re: '.$last_subject;
     } else {
-        $new_subject = $last_subject;
+        $subject = $last_subject;
     }
-    $replyform->addElement('text','subject','Subject: ',array('value'=>$new_subject, 'class'=>'span-10 title'));
-    $bodyelement = new HTML_QuickForm_textarea('message_body', 'Body:', array('class'=>'span-10', 'style'=>'height:24em'));
-    $bodyelement->setRows(24);
-    $bodyelement->setCols(80);
-    $replyform->addElement($bodyelement);
-    $replyform->addElement('submit','save','Send');
-    $page->addBodyContent('<div class="span-12 prepend-6 append-6 last">'.$replyform->toHtml().'</div>');
+
+    ob_start();
+    require 'views/email_form.php';
+    $email_form = ob_get_clean();
+    $page->addBodyContent($email_form);
 }
 
 
@@ -177,14 +186,17 @@ $page->addBodyContent("<h2>People:</h2><ul class='columnar'>");
 foreach ($people as $pid=>$name) {
     if ($pid != MAIN_USER_ID) {
         // Get information about the last email from this person.
-        $sql = ("SELECT from_id, to_id, YEAR(date_and_time) AS year FROM emails
-		WHERE to_id = ".$db->esc($pid)." OR from_id = ".$db->esc($pid)."
-		ORDER BY date_and_time DESC LIMIT 1");
-        $unanswered = $db->fetchAll($sql);
-        if (isset($unanswered[0])) { // If there is any last email.
-            $from_id = $unanswered[0]['from_id'];
-            $to_id = $unanswered[0]['to_id'];
-            $year = $unanswered[0]['year'];
+        $sql = "SELECT from_id, to_id, YEAR(date_and_time) AS year FROM emails
+                WHERE to_id = :pid OR from_id = :pid
+                ORDER BY date_and_time DESC LIMIT 1";
+        $unanswered = $db->prepare($sql);
+        $unanswered->execute(array(':pid'=>$pid));
+        $unanswered = $unanswered->fetch();
+
+        if ($unanswered) { // If there is any last email.
+            $from_id = $unanswered['from_id'];
+            $to_id = $unanswered['to_id'];
+            $year = $unanswered['year'];
             // If the last email was incoming and not from the main user.
             if ($from_id != MAIN_USER_ID) {
                 $class = 'highlight';
@@ -214,7 +226,7 @@ foreach ($people as $pid=>$name) {
         );
     }
 }
-$page->addBodyContent("</ul><hr />");
+$page->addBodyContent("</ul>");
 
 $page->addBodyContent('</div><!-- end div.container -->');
 $page->display();

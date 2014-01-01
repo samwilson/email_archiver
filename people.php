@@ -3,11 +3,30 @@ include 'common.php';
 
 $page->setTitle('People');
 
- 
+/*******************************************************************************
+ * Save person
+ ******************************************************************************/
+
+if (isset($_POST['save']) && !empty($_POST['name'])) {
+	if (isset($_POST['id'])) {
+		$save = $db->prepare('UPDATE people SET name=:name, email_address=:email_address, notes=:notes WHERE id=:id');
+		$save->bindParam(':id', $_POST['id']);
+	} else {
+		$save = $db->prepare('INSERT INTO people SET name=:name, email_address=:email_address, notes=:notes');
+	}
+	$save->bindParam(':name', $_POST['name']);
+	$save->bindParam(':email_address', $_POST['email_address']);
+	$save->bindParam(':notes', $_POST['notes']);
+	if (!$save->execute()) {
+            $page->addBodyContent('<p class="message error">Unable to save. Error: <code>'.  array_pop($save->errorInfo()).'</code></p>');
+        }
+}
+
+
 /*******************************************************************************
  * Construct possible person.
  ******************************************************************************/
- 
+
 if (isset($_GET['person_text'])) {
 	$email_address_pattern = "/[a-zA-Z0-9\.\-_]*@[a-zA-Z0-9\.\-_]*/i";
 	preg_match("/^\"?(\S*)/i",$_GET['person_text'],$first_name);
@@ -21,19 +40,20 @@ if (isset($first_name[1])) {
 if (isset($surname[1])) {
 	$name .= ' '.$surname[1];
 }
-$defaults['name'] = $name;
+$person = array('name'=>$name, 'email_address'=>'', 'notes'=>'');
 if (isset($email_address[0])) {
-	$defaults['email_address'] = $email_address[0];
+	$person['email_address'] = $email_address[0];
 } else {
-	$defaults['email_address'] = '';
+	$person['email_address'] = '';
 }
 
 if (isset($_GET['edit']) && is_numeric($_GET['id'])) {
-	$defaults = $db->fetchAll("SELECT * FROM people WHERE id='".$db->esc($_GET['id'])."' LIMIT 1");
-	$defaults = $defaults[0];
+	$person = $db->prepare("SELECT id, name, email_address, notes FROM people WHERE id=:id LIMIT 1");
+	$person->bindParam(':id', $_GET['id']);
+	$person->execute();
+	$person = $person->fetch();
 	$header = 'Editing person #'.$_GET['id'];
 } else {
-	$defaults = array();
 	$header = 'Enter new person data';
 }
 
@@ -41,6 +61,12 @@ if (isset($_GET['edit']) && is_numeric($_GET['id'])) {
  * New person form.
  ******************************************************************************/
 
+ob_start();
+require 'views/person_form.php';
+$person_form = ob_get_clean();
+$page->addBodyContent($person_form);
+
+/*
 $form = new HTML_QuickForm();
 $form->setDefaults($defaults);
 $form->addElement('header', null, $header);
@@ -57,16 +83,17 @@ $notesArea->setCols(80);
 $form->addElement($notesArea);
 $form->addElement('submit','save', 'Save');
 $page->addBodyContent("<div class='span-24 last'>".$form->toHtml()."</div>");
+
 if ($form->isSubmitted() && $form->validate()) {
 	$db->save('people', $form->getSubmitValues());
-}
+}*/
 
 /*******************************************************************************
  * List people.
  ******************************************************************************/
 
 $list = '<ul>';
-foreach ($db->fetchAll("SELECT * FROM people ORDER BY name ASC") as $p) {
+foreach ($db->query("SELECT * FROM people ORDER BY name ASC") as $p) {
 	$list .= '<li><a href="people.php?edit&id='.$p['id'].'">'.$p['name'].'</a> ';
 	if (!empty($p['email_address'])) $list .= '&lt;'.$p['email_address'].'&gt; ';
 	if (!empty($p['notes'])) $list .= $p['notes'];
@@ -74,11 +101,6 @@ foreach ($db->fetchAll("SELECT * FROM people ORDER BY name ASC") as $p) {
 }
 $list .= '</ul>';
 if (isset($_GET['action']) && $_GET['action']=='print') {
-	$css->parseString("
-		.noprint {display:none}
-		body{font-size:smaller}
-		a {color:black; text-decoration:none}
-	");
 	$page->setBody($list);
 } else {
 	$page->addBodyContent("<p><a href='?action=print'>[Print view]</a></p>".$list);

@@ -8,14 +8,15 @@ require_once 'common.php';
 $message_id = 1;
 $page->setTitle("Inbox");
 
-$imap = new Net_IMAP($mail_server['server'], $mail_server['port']);
-$login = $imap->login($mail_server['username'], $mail_server['password'], true, false);
-if (PEAR::isError($login)) {
+require_once 'Net/IMAP.php';
+$imap = new Net_IMAP($mail_server['imap_server'], $mail_server['imap_port']);
+$login = $imap->login($_SESSION['username'].$mail_server['suffix'], $_SESSION['password'], true, false);
+if ($login instanceof PEAR_Error) {
 	$page->addBodyContent('<p class="error">Unable to connect to mail server.</p>');
 }
 $mboxSelect = $imap->selectMailbox($mail_server['inbox']);
-if (PEAR::isError($mboxSelect)) {
-	$page->addBodyContent("<p class='error'>Unable to select mailbox '" . $mboxSelect->getMessage() . "'.</p>");
+if ($mboxSelect instanceof PEAR_Error) {
+	$page->addBodyContent("<p class='error'>Unable to select mailbox: '" . $mboxSelect->getMessage() . "'.</p>");
 }
 
 
@@ -23,12 +24,17 @@ if (PEAR::isError($mboxSelect)) {
  * Archive email
  ******************************************************************************/
 if (isset($_POST['save'])) {
-    $db->save('emails', $_POST);
+	$save = $db->prepare('INSERT INTO emails SET date_and_time=:date_and_time, subject=:subject, from_id=:from_id, to_id=:to_id, message_body=:message_body');
+	$save->bindParam(':date_and_time', $_POST['date_and_time']);
+	$save->bindParam(':subject', $_POST['subject']);
+	$save->bindParam(':from_id', $_POST['from_id']);
+	$save->bindParam(':to_id', $_POST['to_id']);
+	$save->bindParam(':message_body', $_POST['message_body']);
+	$save->execute();
 }
-if ( (isset($_POST['save']) && $_POST['save']=='Archive + Delete') 
-     || isset($_POST['delete']) ) {
-    $imap->deleteMsg($message_id);
-    $imap->expunge();
+if ( (isset($_POST['save']) && $_POST['save']=='Archive + Delete') || isset($_POST['delete']) ) {
+	$imap->deleteMsg($message_id);
+	$imap->expunge();
 	header("Location:".$_SERVER['SCRIPT_URI']);
 	exit();
 
@@ -41,24 +47,24 @@ if ( (isset($_POST['save']) && $_POST['save']=='Archive + Delete')
 /*******************************************************************************
  * Get list of people
  ******************************************************************************/
-$ppl = $db->fetchAll("SELECT id, name FROM people ORDER BY name ASC");
-$people[0] = 'n. i. d.';
+$ppl = $db->query("SELECT id, name FROM people ORDER BY name ASC");
+$people = array(0 => 'n. i. d.');
 foreach ($ppl as $person) {
 	$people[$person['id']] = $person['name'];
 }
- 
+
 /*******************************************************************************
  * Display currently selected message
  ******************************************************************************/
 $msgCount = $imap->numMsg();
-if (PEAR::isError($msgCount)) {
-	$page->addBodyContent("<p class='error'>No messages found.  '" . $msgCount->getMessage() . "'.</p>");
+if ($msgCount instanceof PEAR_Error) {
+	$page->addBodyContent("<p class='error'>No messages found: '" . $msgCount->getMessage() . "'.</p>");
 }
 elseif ($msgCount > 0) {
 	
 	// Get message headers.
 	$headers = $imap->getSummary(1);
-	if (PEAR::isError($headers)) {
+	if ($headers instanceof PEAR_Error) {
 		die('Failed to parse headers of message: '.$headers->message);
 	}
 	$headers = $headers[0];
@@ -80,24 +86,28 @@ elseif ($msgCount > 0) {
 		'to_id' => $to_id,
 		'from_id' => $from_id
 	);
-	//if (!isset($headers->to)) $headers->to = "";
-	//if (!isset($headers->from)) $headers->from = "";
-		
+
 	// Determine correspondents
 	$email_address_pattern = "/[a-zA-Z0-9\.\-_]*@[a-zA-Z0-9\.\-_]*/i";
 	preg_match($email_address_pattern, $headers['FROM'], $from_email_address);
 	preg_match($email_address_pattern, $headers['TO'], $to_email_address);
 	if (isset($from_email_address[0])) {
-		$from_person = $db->fetchAll("SELECT * FROM people WHERE email_address LIKE '%".$from_email_address[0]."%'");
-		if (isset($from_person[0])) {
-			$from_id = $from_person[0]['id'];
+		$from_email_address = '%'.$from_email_address[0].'%';
+		$from_person = $db->prepare("SELECT * FROM people WHERE email_address LIKE :email_address");
+		$from_person->bindParam(':email_address', $from_email_address);
+		$from_person->execute();
+		if ($from_person = $from_person->fetch()) {
+			$from_id = $from_person['id'];
 			$editform_defaults['from_id'] = $from_id;
 		}
 	}
 	if (isset($to_email_address[0])) {
-		$to_person = $db->fetchAll("SELECT * FROM people WHERE email_address LIKE '%".$to_email_address[0]."%'");
-		if (isset($to_person[0])) {
-			$to_id = $to_person[0]['id'];
+		$to_email_address = '%'.$to_email_address[0].'%';
+		$to_person = $db->prepare("SELECT * FROM people WHERE email_address LIKE :email_address");
+		$to_person->bindParam(':email_address', $to_email_address);
+		$to_person->execute();
+		if ($to_person = $to_person->fetch()) {
+			$to_id = $to_person['id'];
 			$editform_defaults['to_id'] = $to_id;
 		}
 	}
@@ -140,35 +150,16 @@ elseif ($msgCount > 0) {
 	}
 	$editform_defaults['message_body'] = getMsgBody($imap->getStructure(1));
 
-	 // Build form
-	$bodytextarea = new HTML_QuickForm_textarea('message_body',null);
-	$bodytextarea->setAttribute('class','span-20');
-	$bodytextarea->setRows(24);
-	$bodytextarea->setCols(80);
-	$editform = new HTML_QuickForm('editform');
-	$editform->setDefaults($editform_defaults);
-	$editform->addElement('header',null,$imap->numMsg().' Message(s) Remaining');
-	$editform->addGroup(array(
-		new HTML_QuickForm_submit('save','Archive + Delete'),
-		new HTML_QuickForm_submit('save','Archive Only'),
-		new HTML_QuickForm_submit('delete','Delete Only')
-	),null,'Actions: ');
-	$editform->addElement('text','date_and_time','Date: ');
-	$editform->addGroup(array(
-		new HTML_QuickForm_select('from_id','From: ',$people),
-		new HTML_QuickForm_static(null,null,"<a href='people.php?person_text=".$headers['FROM']."'><code>".htmlentities($headers['FROM'])."</code></a> ($from_id)")
-	), null, 'From: ');
-	$editform->addGroup(array(
-		new HTML_QuickForm_select('to_id','To: ',$people),
-		new HTML_QuickForm_static(null,null,"<a href='people.php?person_text=".$headers['TO']."'><code>".htmlentities($headers['TO'])."</code></a> ($to_id)")
-	), null, 'To: ');
-	$editform->addElement('text','subject','Subject: ',array('size'=>80, 'class'=>'span-20'));
-	$editform->addElement($bodytextarea);
-	$page->addBodyContent("<div class='span-24 last'>".$editform->tohtml()."</div>");
+	// Get form
+    $num_msgs = $imap->numMsg();
+    ob_start();
+    require 'views/inbox_form.php';
+    $person_form = ob_get_clean();
+    $page->addBodyContent("<div class='span-24 last'>$person_form</div>");
 }
 
 else {
-	$page->addBodyContent("<p class='centre'>No messages to accession.</p>");
+	$page->addBodyContent("<p class='success message'>No messages to accession.</p>");
 }
 
 
@@ -179,5 +170,3 @@ else {
 $imap->disconnect();
 $page->addBodyContent('</div>');
 $page->display();
-
-?>
