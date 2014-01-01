@@ -38,7 +38,7 @@ foreach ($people as $person_id=>$person_name) {
         foreach ($emails as $email) {
             echo "\\textbf{".texEsc(trim($people[$email['from_id']])).", ".date('l, F jS, g:iA',strtotime($email['date_and_time'])).".}\n\n";
             echo "\\textbf{".texEsc($email['subject'])."}\n\n";
-            echo texEsc(trim($email['message_body']))."\n\n";
+            echo '\\texttt{'.texEsc(trim($email['message_body']))."}\n\n";
             echo "\\vspace{0.3cm}\n";
         }
     }
