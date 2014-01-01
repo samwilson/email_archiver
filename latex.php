@@ -36,9 +36,9 @@ foreach ($people as $person_id=>$person_name) {
     if (count($emails)>0 && $person_id!=9) {
         echo "\chapter{".texEsc($person_name)."}\n";
         foreach ($emails as $email) {
-            echo "\\textbf{".trim(texEsc($people[$email['from_id']])).", ".date('l, F jS, g:iA',strtotime($email['date_and_time'])).".}\n\n";
+            echo "\\textbf{".texEsc(trim($people[$email['from_id']])).", ".date('l, F jS, g:iA',strtotime($email['date_and_time'])).".}\n\n";
             echo "\\textbf{".texEsc($email['subject'])."}\n\n";
-            echo wordwrap(trim(texEsc($email['message_body'])))."\n\n";
+            echo texEsc(trim($email['message_body']))."\n\n";
             echo "\\vspace{0.3cm}\n";
         }
     }
@@ -47,8 +47,8 @@ foreach ($people as $person_id=>$person_name) {
 echo '\end{document}';
 
 function texEsc($str) {
-    $pat = array('/\\\(\s)/',          '/\\\(\S)/',         '/&/', '/%/', '/\$/',        '/>>/',                       '/_/', '/\^/', '/#/', '/"(\s)/',           '/"(\S)/', '/[^\n]\n/m');
-    $rep = array('\textbackslash\ $1', '\textbackslash $1', '\&',  '\%',  '\textdollar ', '\textgreater\textgreater ', '\_',  '\^', '\#',  '\textquotedbl\ $1', '\textquotedbl $1', '\\\\\\'."\n");
+    $pat = array('/\\\(\s)/',          '/\\\(\S)/',         '/&/', '/%/', '/\$/',        '/>>/',                       '/_/', '/\^/', '/#/', '/"(\s)/',           '/"(\S)/', '/[^\n]\n[^\n]/m');
+    $rep = array('\textbackslash\ $1', '\textbackslash $1', '\&',  '\%',  '\textdollar ', '\textgreater\textgreater ', '\_',  '\^', '\#',  '\textquotedbl\ $1', '\textquotedbl $1', ' \\\\\\'."\n");
     return preg_replace($pat, $rep, $str);
 }
 
