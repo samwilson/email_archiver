@@ -47,8 +47,8 @@ foreach ($people as $person_id=>$person_name) {
 echo '\end{document}';
 
 function texEsc($str) {
-    $pat = array('/\\\(\s)/',          '/\\\(\S)/',         '/&/', '/%/', '/\$/',        '/>>/',                       '/_/', '/\^/', '/#/', '/"(\s)/',           '/"(\S)/', '/[^\n]\n[^\n]/m');
-    $rep = array('\textbackslash\ $1', '\textbackslash $1', '\&',  '\%',  '\textdollar ', '\textgreater\textgreater ', '\_',  '\^', '\#',  '\textquotedbl\ $1', '\textquotedbl $1', ' \\\\\\'."\n");
+    $pat = array('/\\\(\s)/',          '/\\\(\S)/',         '/&/', '/%/', '/\$/',        '/>>/',                       '/_/', '/\^/', '/#/', '/"(\s)/',           '/"(\S)/', '/[^\n]\n([^\n])/m');
+    $rep = array('\textbackslash\ $1', '\textbackslash $1', '\&',  '\%',  '\textdollar ', '\textgreater\textgreater ', '\_',  '\^', '\#',  '\textquotedbl\ $1', '\textquotedbl $1', ' \\\\\\'."\n".'$1');
     return preg_replace($pat, $rep, $str);
 }
 
