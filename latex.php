@@ -36,7 +36,7 @@ foreach ($people as $person_id=>$person_name) {
     if (count($emails)>0 && $person_id!=9) {
         echo "\chapter{".texEsc($person_name)."}\n";
         foreach ($emails as $email) {
-            echo "\\textbf{".texEsc(trim($people[$email['from_id']])).", ".date('l, F jS, g:iA',strtotime($email['date_and_time'])).".}\n\n";
+            echo "\\textbf{".texEsc(trim($people[$email['from_id']])).": ".date('l, F jS, g:iA',strtotime($email['date_and_time'])).".}\n\n";
             echo "\\textbf{".texEsc($email['subject'])."}\n\n";
             echo '\\texttt{'.texEsc(trim($email['message_body']))."}\n\n";
             echo "\\vspace{0.3cm}\n";
