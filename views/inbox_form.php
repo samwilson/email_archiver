@@ -54,7 +54,7 @@
             <tr>
                 <th><label for="subject">Subject:</label></th>
                 <td>
-                    <input type="text" name="subject" id="subject"
+                    <input type="text" name="subject" id="subject" size="80"
                            value="<?php echo htmlentities($editform_defaults['subject']) ?>" />
                 </td>
             </tr>

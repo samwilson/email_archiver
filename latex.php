@@ -3,7 +3,8 @@ require_once 'common.php';
 header("Content-Type:text/plain");
 if (!empty($_REQUEST['year'])) $year = $_REQUEST['year']; else $year = date('Y');
 
-$ppl = $db->fetchAll("SELECT * FROM people ORDER BY name ASC");
+
+$ppl = $db->query("SELECT * FROM people ORDER BY name ASC")->fetchAll();
 foreach ($ppl as $person) {
     $people[$person['id']] = $person['name'];
 }
@@ -13,7 +14,7 @@ echo "\documentclass{book}
 \\usepackage[T1]{fontenc}
 \\usepackage{alltt}
 \\title{Emails}
-\author{}
+\author{".$people[MAIN_USER_ID]."}
 \date{".$year."}
 \setlength{\parindent}{0cm}
 \begin{document}
@@ -24,13 +25,14 @@ echo "\documentclass{book}
 
 foreach ($people as $person_id=>$person_name) {
     $sql = "SELECT * FROM emails
-        WHERE YEAR(date_and_time)=".$db->esc($year)."
-        AND (
-                to_id = ".$db->esc($person_id)."
-                OR from_id = ".$db->esc($person_id)."
-        )
+        WHERE YEAR(date_and_time)=:year
+        AND (to_id = :person_id OR from_id = :person_id)
         ORDER BY date_and_time ASC";
-    $emails = $db->fetchAll($sql);
+    $params = array(':year'=>$year, ':person_id'=>$person_id);
+    $prepared_stmt = $db->prepare($sql);
+    $prepared_stmt->execute($params);
+    $emails = $prepared_stmt->fetchAll();
+
     if (count($emails)>0 && $person_id!=9) {
         echo "\chapter{".texEsc($person_name)."}\n";
         foreach ($emails as $email) {
@@ -42,7 +44,7 @@ foreach ($people as $person_id=>$person_name) {
     }
 }
 
-echo "\end{document}";
+echo '\end{document}';
 
 function texEsc($str) {
     $pat = array('/\\\(\s)/',          '/\\\(\S)/',         '/&/', '/%/', '/\$/',        '/>>/',                       '/_/', '/\^/', '/#/', '/"(\s)/',           '/"(\S)/'         );

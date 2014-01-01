@@ -55,7 +55,7 @@ error_reporting($old_error_reporting);
 require_once 'HTML/Page2.php';
 $page = new HTML_Page2();
 $page->setDoctype('XHTML 1.0 Strict');
-$page->addStylesheet('screen.css', 'text/css', 'screen');
+$page->addStylesheet('style.css', 'text/css');
 $page->setTitle(SITETITLE);
 
 // Javascript stuff.
