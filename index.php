@@ -47,18 +47,19 @@ if (isset($_POST['send'])) {
 		exit(1);
 	}
 
-	// Save the message
+    // Save the message
     $sql = 'INSERT INTO emails '
-		 . ' SET from_id=:from, to_id=:to, date_and_time=NOW(),'
-		 . ' subject=:subject, message_body=:message_body';
+        . ' SET from_id=:from, to_id=:to, date_and_time=:date_and_time,'
+        . ' subject=:subject, message_body=:message_body';
     $insert = $db->prepare($sql);
     $insert->bindParam(':from', $mainUser['id']);
     $insert->bindParam(':to', $with);
+    $insert->bindParam(':date_and_time', date('Y-m-d H:i:s'));
     $insert->bindParam(':subject', $_POST['subject']);
     $insert->bindParam(':message_body', $_POST['message_body']);
     if (!$insert->execute()) {
-		print_r($insert->errorInfo());
-		$exit(1);
+        print_r($insert->errorInfo());
+        $exit(1);
     }
 
     header("Location:".$_SERVER['PHP_SELF']."?with=$with&year=$year#reply-form");
