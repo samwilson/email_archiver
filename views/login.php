@@ -1,12 +1,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
     <head>
         <title>Log In</title>
-        <link rel="stylesheet" href="screen.css" media="all" />
+        <link rel="stylesheet" href="style.css" media="all" />
+        <script type="text/javascript" src="scripts.js"></script>
     </head>
-    <body class="login-page">
+    <body class="login-page" onload="onBodyLoad()">
 
         <h1 class="centre">Log In</h1>
-
 
         <form action="login.php" method="post" class="login-form">
             <table>

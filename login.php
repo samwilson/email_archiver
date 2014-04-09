@@ -24,4 +24,4 @@ if (isset($_POST['username'])) {
     }
 }
 
-require 'views/login.php';
+require_once 'views/login.php';
