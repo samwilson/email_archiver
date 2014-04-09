@@ -105,7 +105,7 @@ form.vertical th { vertical-align:top }
 
 @media print {
 	.noprint {display:none}
-	body{font-size:smaller}
+	body{font-size:smaller; margin:0}
 	a {color:black; text-decoration:none}
 }
 

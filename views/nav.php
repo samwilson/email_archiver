@@ -1,5 +1,5 @@
 
-<p class="centre">
+<p class="centre noprint">
     &bull; <a href="index.php">Emails</a>
     &bull; <a href="inbox.php">Inbox</a>
     &bull; <a href="people.php">People</a>
