@@ -20,7 +20,7 @@
 
 <form action="index.php#reply-form" method="get">
     <p class="centre">
-        <?php echo $email_count ?> emails in archive.
+        <?= number_format($email_count) ?> emails in archive.
         <select name="with">
             <?php foreach ($people as $id => $name): ?>
             <option value="<?php echo $id ?>"<?php if ($with==$id) echo ' selected' ?>>
