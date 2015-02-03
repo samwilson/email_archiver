@@ -4,9 +4,8 @@
         <tr>
             <th><label for="to">To:</label></th>
             <td>
-				<?php echo $to['name'].' &lt;'.$to['email_address'].'&gt;' ?>
-				<input type="hidden" name="to" id="to" value="<?php echo $to['id'] ?>" />
-            
+                <?php echo $to['name'].' &lt;'.$to['email_address'].'&gt;' ?>
+                <input type="hidden" name="to" id="to" value="<?php echo $to['id'] ?>" />
             </td>
         </tr>
         <tr>

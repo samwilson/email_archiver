@@ -10,8 +10,19 @@
         }
     ],
     "require": {
-        "swiftmailer/swiftmailer": "v5.0.3"
+        "swiftmailer/swiftmailer": "5.*",
+        "pear/net_imap": "1.*"
     },
     "require-dev": {
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/pear/Net_IMAP.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/pear/PEAR_Exception.git"
+        }
+    ]
 }

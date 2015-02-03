@@ -21,31 +21,31 @@ if (isset($_POST['send'])) {
     $body = $_POST['message_body'];
     if (!empty($_POST['last_body'])) {
         $body .= "\n\n
-------------------------------- Previous message -------------------------------
+-------- Previous message --------
 -- Date: ".$_POST['last_date']."
 -- From: ".$to['name']." <".$to['email_address'].">
 --   To: ".$mainUser['name']." <".$mainUser['email_address'].">
---------------------------------------------------------------------------------
+--------
 
 ".wordwrap($_POST['last_body'],78)."
 
---------------------------- End of previous message ----------------------------
+-------- End of previous message --------
 ";
     }
 
     // Send the message
-	$message = Swift_Message::newInstance($_POST['subject'], $body)
-		->setFrom(array($mainUser['email_address'] => $mainUser['name']))
-		->setTo(array($to['email_address'] => $to['name']));
-	$transport = Swift_SmtpTransport::newInstance($mail_server['smtp_server'], $mail_server['smtp_port'])
-		->setUsername($_SESSION['username'].$mail_server['suffix'])
-		->setPassword($_SESSION['password']);
-	$mailer = Swift_Mailer::newInstance($transport);
-	$result = $mailer->send($message);
-	if (!$result) {
-		echo 'The mail could not be sent.';
-		exit(1);
-	}
+    $message = Swift_Message::newInstance($_POST['subject'], $body)
+        ->setFrom(array($mainUser['email_address'] => $mainUser['name']))
+        ->setTo(array($to['email_address'] => $to['name']));
+    $transport = Swift_SmtpTransport::newInstance($mail_server['smtp_server'], $mail_server['smtp_port'])
+        ->setUsername($_SESSION['username'].$mail_server['suffix'])
+        ->setPassword($_SESSION['password']);
+    $mailer = Swift_Mailer::newInstance($transport);
+    $result = $mailer->send($message);
+    if (!$result) {
+        echo 'The mail could not be sent.';
+        exit(1);
+    }
 
     // Save the message
     $sql = 'INSERT INTO emails '
