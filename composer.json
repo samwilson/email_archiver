@@ -9,20 +9,31 @@
             "role": "developer"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "Samwilson\\EmailArchiver\\": "src/"
+        }
+    },
     "require": {
+        "slim/slim": "^3.0",
+        "slim/twig-view": "^2.2",
+        "twig/twig": "^1.18",
         "swiftmailer/swiftmailer": "5.*",
-        "pear/net_imap": "1.*"
+        "tedivm/fetch": "^0.7",
+        "doctrine/dbal": "^2.5"
     },
     "require-dev": {
+        "squizlabs/php_codesniffer": "^3.0"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/pear/Net_IMAP.git"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/pear/PEAR_Exception.git"
-        }
-    ]
+    "scripts": {
+        "mkconfig": [
+            "php -r \"file_exists('config.php') || copy('config.dist.php', 'config.php');\""
+        ],
+        "post-install-cmd": [
+            "composer mkconfig"
+        ],
+        "post-update-cmd": [
+            "composer mkconfig"
+        ]
+    }
 }

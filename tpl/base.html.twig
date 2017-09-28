@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Email Archiver</title>
+
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body onload="onBodyLoad();">
+        <div class="container">
+            <p class="centre noprint">
+                &bull; <a href="{{ path_for('home') }}">Emails</a>
+                &bull; <a href="inbox.php">Inbox</a>
+                &bull; <a href="people.php">People</a>
+                &bull; <a href="?logout">Logout</a>
+                &bull; Logged in as <?php echo $_SESSION['username'] ?>
+                &bull;
+            </p>
+            <main id="content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+        <script type="application/javascript" src="scripts.js"></script>
+    </body>
+</html>
