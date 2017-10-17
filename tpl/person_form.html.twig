@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+<h2>People</h2>
+
+<div class='span-24 last noprint'>
+    <form action="{{ path_for('person_save') }}" method="post">
+        <table>
+            <caption>Person {{ id }}</caption>
+            <tr>
+                <th><label for="name">Name:</label></th>
+                <td>
+                    <input type="text" name="name" id="name" value="{{ person.name }}" />
+                </td>
+            </tr>
+            <tr>
+                <th><label for="email_address">Email Address:</label></th>
+                <td>
+                    <input type="text" name="email_address" id="email_address" value="{{ person.email_address }}" size="80" />
+                </td>
+            </tr>
+            <tr>
+                <th><label for="notes">Notes:</label></th>
+                <td><textarea name="notes" id="notes" rows="8" cols="80">{{ person.notes }}</textarea></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    {% if person.id %}
+                    <input type="hidden" name="id" value="{{ person.id }}" />
+                    {% endif %}
+                    <input type="submit" name="save" value="Save" />
+                    <a href="{{ path_for('people') }}">[Cancel]</a>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+
+{% endblock %}

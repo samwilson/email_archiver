@@ -78,8 +78,10 @@ $app->get('/', EmailsController::class.':home')->setName('home');
 $app->get('/send', EmailsController::class.':send')->setName('send');
 $app->get('/inbox', InboxController::class.':inbox')->setName('inbox');
 $app->get('/people', PeopleController::class.':people')->setName('people');
+$app->get('/people/new', PeopleController::class.':edit')->setName('person_new');
 $app->get('/people/{id}/edit', PeopleController::class.':edit')->setName('person_edit');
 $app->get('/people/{id}/delete', PeopleController::class.':delete')->setName('person_delete');
+$app->post('/people/save', PeopleController::class.':save')->setName('person_save');
 $app->get('/logout', InboxController::class.':logout')->setName('logout');
 
 // Run the application.
