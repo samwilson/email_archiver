@@ -1,5 +1,64 @@
 {% extends 'base.html.twig' %}
 
-{% block body %}
+{% block content %}
+
+<p class='centre'>Showing {{ emails|length }} emails.</p>
+
+{% for email in emails %}
+<div class="email {% if email.from_id == main_user_id %}from-me{% endif %}"
+     {% if loop.last %}id="last-email"{% endif %}>
+    <p>
+        <span class='from'>{{ attribute( people, email.from_id ) }}</span>
+        {% if not with %}(to {{ attribute( people, email.to_id ) }}){% endif %}
+        {{ email.date_and_time|date('l, F jS, g:iA') }}
+        <strong>{{ email.subject }}</strong>
+    </p>
+    <pre>{{ email.message_body|wordwrap(78) }}</pre>
+</div>
+{% endfor %}
+
+<form action="{{ path_for('send') }}" method="post">
+    <table>
+        <caption>Compose</caption>
+        <tr>
+            <th><label for="to">To:</label></th>
+            <td>
+                {{ to.name }} &lt;{{ to.email_address }}&gt;
+                <input type="hidden" name="to" id="to" value="{{ to.id }}" />
+            </td>
+        </tr>
+        <tr>
+            <th><label for="subject">Subject:</label></th>
+            <td><input type="text" name="subject" id="subject" value="{{ subject }}" size="80"/></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><textarea name="message_body" rows="24" cols="80"></textarea></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <input type="submit" name="send" value="Send" />
+                <input type="hidden" name="with" value="{{ with }}" />
+                <input type="hidden" name="year" value="{{ year }}" />
+                <input type="hidden" name="last_date" value="{{ last_date }}" />
+                {% if last_from_id == main_user_id %}
+                <input type="hidden" name="last_body" value="{{ last_body }}" />
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+</form>
+
+<h2>People:</h2>
+<ul class='columnar'>
+    {% for person in people %}
+        <li>
+            <a class='$class' href='?with=$with&year=$year#reply-form'>
+                $name
+            </a>
+        </li>
+    {% endfor %}
+</ul>
     
 {% endblock %}

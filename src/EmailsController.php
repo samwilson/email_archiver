@@ -10,11 +10,11 @@ use Swift_Message;
 use Swift_SmtpTransport;
 
 class EmailsController extends Controller {
-    
+
     public function home(Request $request, Response $response, $args)
     {
-        if (!empty($_REQUEST['with'])) $with = $_REQUEST['with']; else $with = false;
-        if (!empty($_REQUEST['year'])) $year = $_REQUEST['year']; else $year = false;
+        $with = $request->getParam('with', false);
+        $year = $request->getParam('year', false);
 
         $mainUser = $this->db->query('SELECT * FROM people WHERE id = '.MAIN_USER_ID);
         $mainUser = $mainUser->fetch();
@@ -61,91 +61,44 @@ class EmailsController extends Controller {
         /*******************************************************************************
          * Navigation form stuff.
          ******************************************************************************/
-        $email_count = $this->db->query('SELECT COUNT(*) FROM emails LIMIT 1')->fetchColumn();
-        $this->view->render($response, 'email_nav_form.php');
-//        ob_start();
-//        require_once 'views/email_nav_form.php';
-//        $nav = ob_get_clean();
-//        $page->addBodyContent($nav);
+        $viewData['email_count'] = $this->db->query('SELECT COUNT(*) FROM emails LIMIT 1')->fetchColumn();
 
 
         /*******************************************************************************
          * list emails
          ******************************************************************************/
-
+        $emails = [];
         if ($year || $with) {
-
-            $sql = "SELECT * FROM emails WHERE YEAR(date_and_time)=:year ";
-            $params = array(':year'=>$year);
+            $sql = "SELECT * FROM emails WHERE YEAR(date_and_time) = :year ";
+            $params = [':year'=>$year];
             if ($with) {
                 $sql .= "AND (to_id = :with OR from_id = :with) ";
                 $params[':with'] = $with;
             }
             $sql .= "ORDER BY date_and_time ASC";
-
-            $emails = $db->prepare($sql);
-            $emails->execute($params);
-            $emails = $emails->fetchAll();
-            $last_subject = '';
-            $last_body = '';
-            $last_date = '';
-            $last_from_id = '';
-            $page->addBodyContent("<p class='centre'>Showing ".count($emails)." emails.</p>");
-            if (count($emails) > 0) {
-                foreach ($emails as $count=>$email) {
-                    $email_class = ($email['from_id']==MAIN_USER_ID) ? 'from-me' : '';
-                    $page->addBodyContent("<div class='email $email_class'><p>");
-                    if ($count==count($emails)-1) {
-                        $page->addBodyContent("<a name='reply-form'></a>");
-                    }
-                    $page->addBodyContent("
-                <span class='from $email_class'>".$people[$email['from_id']]."</span>
-            ");
-                    if (!$with) {
-                        $page->addBodyContent(" (to ".$people[$email['to_id']].") ");
-                    }
-                    $page->addBodyContent(
-                        date('l, F jS, g:iA',strtotime($email['date_and_time']))."
-                    &nbsp;&nbsp;
-                    <strong>".$email['subject']."</strong> &nbsp;&nbsp;
-                    <!--span class='small quiet'>
-                      <a href='?table_name=emails&edit&id=".$email['id']."'>[e]</a>
-                      <del><a href='?table_name=emails&delete&id=".$email['id']."'>[d]</a></del>
-                    </span-->
-                    </p><pre>".trim(wordwrap(htmlentities($email['message_body']), 78))."</pre></div>");
-                    $last_subject = $email['subject'];
-                    $last_body = $email['message_body'];
-                    $last_date = $email['date_and_time'];
-                    $last_from_id = $email['from_id'];
-                }
-                $page->addBodyContent("<p class='centre'>Showing ".count($emails)." emails.</p>");
-            }
+            $emailsQuery = $this->db->prepare($sql);
+            $emailsQuery->execute($params);
+            $emails = $emailsQuery->fetchAll();
         }
 
 
         /*******************************************************************************
          * reply form
          ******************************************************************************/
-
         if ($with) {
             //$sql = 'SELECT CONCAT(name," <",email_address,">") FROM people WHERE id = :id';
             $sql = 'SELECT id, name, email_address FROM people WHERE id = :id';
             //$to = $db->('people',$with,"CONCAT(name,' <',email_address,'>')");
-            $to = $db->prepare($sql);
+            $to = $this->db->prepare($sql);
             $to->execute(array(':id'=>$with));
             $to = $to->fetch(); // htmlentities($to->fetchColumn());
 
             // Subject
-            if (stristr($last_subject,'re') === FALSE) {
-                $subject = 'Re: '.$last_subject;
-            } else {
-                $subject = $last_subject;
-            }
-
-            ob_start();
-            require 'views/email_form.php';
-            $email_form = ob_get_clean();
-            $page->addBodyContent($email_form);
+//            if (stristr($last_subject,'re') === FALSE) {
+//                $subject = 'Re: '.$last_subject;
+//            } else {
+//                $subject = $last_subject;
+//            }
         }
 
 
@@ -153,7 +106,6 @@ class EmailsController extends Controller {
          * who still to reply to
          ******************************************************************************/
 
-        $page->addBodyContent("<h2>People:</h2><ul class='columnar'>");
         foreach ($people as $pid=>$name) {
             if ($pid != MAIN_USER_ID) {
                 // Get information about the last email from this person.
@@ -189,17 +141,18 @@ class EmailsController extends Controller {
                     $class = '';
                 }
                 $page->addBodyContent(
-                    "<li>\n".
-                    "  <a class='$class' href='?with=$with&year=$year#reply-form'>\n".
-                    "    $name\n".
-                    "  </a>\n".
-                    "</li>\n"
                 );
             }
         }
-        $page->addBodyContent("</ul>");
-        
-        return $this->view->render($response, 'emails.html.twig');
+        return $this->view->render(
+            $response,
+            'emails.html.twig',
+            [
+                'with' => $with,
+                'year' => $year,
+                'emails' => $emails,
+            ]
+        );
     }
 
     protected function sendMessage()
@@ -249,5 +202,55 @@ class EmailsController extends Controller {
         }
 
         header("Location:".$_SERVER['PHP_SELF']."?with=$with&year=$year#reply-form");
+    }
+
+	protected function getEmails($with, $year)
+	{
+		$sql = "SELECT * FROM emails WHERE YEAR(date_and_time)=:year ";
+		$params = [':year'=>$year];
+		if ($with) {
+			$sql .= "AND (to_id = :with OR from_id = :with) ";
+			$params[':with'] = $with;
+		}
+		$sql .= "ORDER BY date_and_time ASC";
+
+		$emails = $this->db->prepare($sql);
+		$emails->execute($params);
+		$emails = $emails->fetchAll();
+		$last_subject = '';
+		$last_body = '';
+		$last_date = '';
+		$last_from_id = '';
+
+		if (count($emails) > 0) {
+			foreach ($emails as $count=>$email) {
+				$email_class = ($email['from_id']==MAIN_USER_ID) ? 'from-me' : '';
+				$page->addBodyContent("<div class='email $email_class'><p>");
+				if ($count==count($emails)-1) {
+					$page->addBodyContent("<a name='reply-form'></a>");
+				}
+				$page->addBodyContent("
+                <span class='from $email_class'>".$people[$email['from_id']]."</span>
+            ");
+				if (!$with) {
+					$page->addBodyContent(" (to ".$people[$email['to_id']].") ");
+				}
+				$page->addBodyContent(
+					date('l, F jS, g:iA',strtotime($email['date_and_time']))."
+                    &nbsp;&nbsp;
+                    <strong>".$email['subject']."</strong> &nbsp;&nbsp;
+                    <!--span class='small quiet'>
+                      <a href='?table_name=emails&edit&id=".$email['id']."'>[e]</a>
+                      <del><a href='?table_name=emails&delete&id=".$email['id']."'>[d]</a></del>
+                    </span-->
+                    </p><pre>".trim(wordwrap(htmlentities($email['message_body']), 78))."</pre></div>");
+				$last_subject = $email['subject'];
+				$last_body = $email['message_body'];
+				$last_date = $email['date_and_time'];
+				$last_from_id = $email['from_id'];
+			}
+			$page->addBodyContent("<p class='centre'>Showing ".count($emails)." emails.</p>");
+		}
+		return $email;
     }
 }
