@@ -10,14 +10,20 @@
     </head>
     <body onload="onBodyLoad();">
         <div class="container">
+            {% if logged_in %}
             <p class="centre noprint">
                 &bull; <a href="{{ path_for('home') }}">Emails</a>
                 &bull; <a href="{{ path_for('inbox') }}">Inbox</a>
                 &bull; <a href="{{ path_for('people') }}">People</a>
                 &bull; <a href="{{ path_for('logout') }}">Logout</a>
-                &bull; Logged in as {{ user }}
                 &bull;
             </p>
+            {% endif %}
+
+            {% if flash %}
+                <p class="flash notice message">{{ flash }}</p>
+            {% endif %}
+
             <main id="content">
                 {% block content %}{% endblock %}
             </main>

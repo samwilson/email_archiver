@@ -1,27 +1,47 @@
 <?php
 
-require_once 'common.php';
+namespace Samwilson\EmailArchiver;
 
-$login_failed = FALSE;
+use Slim\Http\Request;
+use Slim\Http\Response;
 
-if (isset($_POST['username'])) {
+class UserController extends Controller {
 
-    require_once 'Net/IMAP.php';
-    $imap = new Net_IMAP($mail_server['imap_server'], $mail_server['imap_port']);
-    $login = $imap->login($_POST['username'].$mail_server['suffix'], $_POST['password'], true, false);
+	protected $requireLogin = false;
 
-    if ($login instanceof PEAR_Error) {
-        $login_failed = true;
-    } else {
-        // User exists; log user in.
-        $fingerprint = md5($_SERVER['REMOTE_ADDR'] . $_SERVER['HTTP_USER_AGENT']);
-        $_SESSION['last_active'] = time();
-        $_SESSION['fingerprint'] = $fingerprint;
-        $_SESSION['logged_in'] = true;
-        $_SESSION['username'] = $_POST['username'];
-        $_SESSION['password'] = $_POST['password'];
-        header('Location:index.php');
-    }
+	public function login(Request $request, Response $response, $args)
+	{
+		if (isset($_SESSION['logged_in'])) {
+			return $response->withRedirect($this->router->pathFor('home'));
+		}
+		return $this->view->render(
+			$response,
+			'login.html.twig',
+			[
+				'flash' => $this->getFlash(),
+			]
+		);
+	}
+
+	public function loginPost(Request $request, Response $response, $args) {
+		if (isset($_SESSION['logged_in'])) {
+			return $response->withRedirect($this->router->pathFor('home'));
+		}
+		$appPass = $this->settings->get('appPass');
+		$pass = $request->getParam('password');
+		if (!password_verify ($pass, $appPass)) {
+			$this->setFlash('Authentication failure');
+			return $response->withRedirect($this->router->pathFor('login'));
+		}
+		$_SESSION['logged_in'] = true;
+		return $response->withRedirect($this->router->pathFor('home'));
+	}
+
+	public function logout(Request $request, Response $response, $args)
+	{
+		unset($_SESSION['logged_in']);
+		session_regenerate_id();
+		$this->setFlash('Logged out');
+		return $response->withRedirect($this->router->pathFor('login'));
+	}
 }
-
-require_once 'views/login.php';

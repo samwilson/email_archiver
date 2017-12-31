@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+
+<div class='span-24 last'>
+    <form action="{{ path_for('email_save') }}" method="post" id="inbox-form" class="vertical">
+        <table>
+            <caption>
+                {{ message_count }} message{% if message_count > 1 %}s{% endif %} remaining to be archived.
+            </caption>
+            <tr>
+                <td>Actions:</td>
+                <td>
+                    <input type="submit" name="save" value="Archive + Delete" />
+                    <input type="submit" name="save" value="Archive Only" />
+                    <input type="submit" name="delete" value="Delete Only" />
+                </td>
+            </tr>
+            <tr>
+                <th><label for="date_and_time">Date:</label></th>
+                <td>
+                    <input type="text" name="date_and_time" id="date_and_time" value="{{ date_and_time }}" />
+                </td>
+            </tr>
+            <tr>
+                <th><label for="from_id">From:</label></th>
+                <td>
+                    <select name="from_id" id="from_id">
+                        {% for pid,pname in people %}
+                        <option value="{{ pid }}" {% if pid == from_id %}selected{% endif %}>
+                            {{ pname }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <a href='{{ path_for('person_new') }}?text={{ from_string}}' title="Create new person record">
+                        {{ from_string }}
+                    </a>
+                    ({{ from_id }})
+                </td>
+            </tr>
+            <tr>
+                <th><label for="to_id">To:</label></th>
+                <td>
+                    <select name="to_id" id="to_id">
+                        {% for pid,pname in people %}
+                            <option value="{{ pid }}" {% if pid == to_id %}selected{% endif %}>
+                                {{ pname }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <a href='{{ path_for('person_new') }}?text={{ to_string }}' title="Create new person record">
+                        {{ to_string }}
+                    </a>
+                    ({{ to_id }})
+                </td>
+            </tr>
+            <tr>
+                <th><label for="subject">Subject:</label></th>
+                <td>
+                    <input type="text" name="subject" id="subject" size="80" value="{{ subject }}" />
+                </td>
+            </tr>
+            <tr>
+                <th><label for="message_body">Message:</label></th>
+                <td><textarea id="message_body" name="message_body" rows="24" cols="80">{{ message_body }}</textarea></td>
+            </tr>
+        </table>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,5 +1,5 @@
 function onBodyLoad() {
-	if (document.getElementById('username')) {
-		document.getElementById('username').focus();
+	if (document.getElementById('password')) {
+		document.getElementById('password').focus();
 	}
 }

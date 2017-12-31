@@ -4,8 +4,8 @@ Email Archiver
 
 Email Archiver is a simple email archiving database and interface.
 
-Schema
-------
+Installation
+------------
 
 The database has the following structure::
 
@@ -33,6 +33,10 @@ The database has the following structure::
     ALTER TABLE `emails`
         ADD CONSTRAINT emails_from FOREIGN KEY (from_id) REFERENCES people (id),
         ADD CONSTRAINT emails_to FOREIGN KEY (to_id) REFERENCES people (id);
+
+Create a password and add it to `config.php`::
+
+    $ php -r "echo password_hash('y0urpwd123!', PASSWORD_DEFAULT).PHP_EOL;"
 
 Licence
 -------

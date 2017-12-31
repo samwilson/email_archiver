@@ -17,6 +17,7 @@
 </div>
 {% endfor %}
 
+{% if with %}
 <form action="{{ path_for('send') }}" method="post">
     <table>
         <caption>Compose</caption>
@@ -49,13 +50,14 @@
         </tr>
     </table>
 </form>
+{% endif %}
 
 <h2>People:</h2>
 <ul class='columnar'>
     {% for person in people %}
         <li>
-            <a class='$class' href='?with=$with&year=$year#reply-form'>
-                $name
+            <a class='{{ person.css_class }}' href="{{ path_for('home') }}?with={{ person.id }}&year={{ person.most_recent_year }}#reply-form">
+                {{ person.name }}
             </a>
         </li>
     {% endfor %}
