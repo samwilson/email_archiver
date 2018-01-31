@@ -113,7 +113,7 @@ div.email {background-color:#eee; margin:1em; padding:1em}
 
 .email {text-align:left; border:2px solid #CCC}
 .email.from-me {border:2px solid #060}
-.from {color:#CCC;font-variant:small-caps}
+.from {font-variant:small-caps}
 .from.from-me {color:#060}
 
 
@@ -123,8 +123,8 @@ a:hover { text-decoration:underline; }
 .centre {text-align:center; margin:auto}
 .quiet a { color:inherit }
 .quiet a:hover { color:blue }
-.columnar { list-style-type:none }
-.columnar li { width:20%; float:left; margin:0; text-align:left; }
+.columnar { list-style-type:none; clear:both }
+.columnar li { width:20%; display:inline-block; margin:0; text-align:left; }
 .caps { font-weight:normal; }
 strong .caps { font-weight:bolder; }
 

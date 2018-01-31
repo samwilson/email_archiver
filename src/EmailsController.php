@@ -55,13 +55,6 @@ class EmailsController extends Controller
 			$people[$person['id']] = $person['name'];
 		}
 
-
-		/*******************************************************************************
-		 * Navigation form stuff.
-		 ******************************************************************************/
-		$viewData['email_count'] = $this->db->query('SELECT COUNT(*) FROM emails LIMIT 1')->fetchColumn();
-
-
 		/*******************************************************************************
 		 * list emails
 		 ******************************************************************************/
@@ -83,15 +76,20 @@ class EmailsController extends Controller
 		/*******************************************************************************
 		 * reply form
 		 ******************************************************************************/
+		$to = null;
+		$subject = '';
 		if ($with) {
 			$to = $this->getPerson($with);
-			
+
 			// Subject
-//            if (stristr($last_subject,'re') === FALSE) {
-//                $subject = 'Re: '.$last_subject;
-//            } else {
-//                $subject = $last_subject;
-//            }
+			if (count($emails) > 0) {
+				$lastSubject = $emails[count($emails) - 1]['subject'];
+				if (stristr($lastSubject, 're') === false) {
+					$subject = 'Re: ' . $lastSubject;
+				} else {
+					$subject = $lastSubject;
+				}
+			}
 		}
 
 		/*******************************************************************************
@@ -100,9 +98,6 @@ class EmailsController extends Controller
 
 		$peopleInfo = [];
 		foreach ($people as $pid => $name) {
-			if ($pid == MAIN_USER_ID) {
-				continue;
-			}
 			// Get information about the last email from this person.
 			$sql = "SELECT from_id, to_id, YEAR(date_and_time) AS year FROM emails
 			WHERE to_id = :pid OR from_id = :pid ORDER BY date_and_time DESC LIMIT 1";
@@ -111,11 +106,11 @@ class EmailsController extends Controller
 			$unanswered = $unanswered->fetch();
 
 			if ($unanswered) { // If there is any last email.
-				$from_id = $unanswered['from_id'];
+				$fromId = $unanswered['from_id'];
 				$to_id = $unanswered['to_id'];
 				$mostRecentYear = $unanswered['year'];
 				// If the last email was incoming and not from the main user.
-				if ($from_id != MAIN_USER_ID) {
+				if ($fromId != MAIN_USER_ID) {
 					$cssClass = 'highlight';
 					//$with = $from_id;
 					//$page->addBodyContent("<li><strong><a style='color:red' href='?with={$from_id}&year={$year}#reply-form'>$name</a></strong></li>");
@@ -126,7 +121,7 @@ class EmailsController extends Controller
 					//} elseif () {
 					//$page->addBodyContent("<li><a href='?with=$pid&year=".date('Y')."#reply-form'>$name</a></li>");
 				}
-				$from_id = null;
+				$fromId = null;
 				$to_id = null;
 				//$year = null;
 			} else { // There was no last email.
@@ -134,7 +129,7 @@ class EmailsController extends Controller
 				//$with = $pid;
 				$cssClass = '';
 			}
-			$peopleInfo[] = [
+			$peopleInfo[$pid] = [
 				'id' => $pid,
 				'name' => $name,
 				'css_class' => $cssClass,
@@ -142,15 +137,20 @@ class EmailsController extends Controller
 			];
 		}
 
+		$emailCount = $this->db->query('SELECT COUNT(*) FROM emails LIMIT 1')->fetchColumn();
+
 		return $this->renderView(
 			$response,
 			'emails.html.twig',
 			[
+				'main_user_id' => MAIN_USER_ID,
 				'with' => $with,
 				'to' => $to,
 				'year' => $mostRecentYear,
 				'emails' => $emails,
 				'people' => $peopleInfo,
+				'email_count' => $emailCount,
+				'subject' => $subject,
 			]
 		);
 	}
@@ -187,7 +187,7 @@ class EmailsController extends Controller
 			->setFrom(array($mainUser['email_address'] => $mainUser['name']))
 			->setTo(array($to['email_address'] => $to['name']));
 		$transport = Swift_SmtpTransport::newInstance($server['smtp_server'], $server['smtp_port'])
-			->setUsername($server['username'] . $server['suffix'])
+			->setUsername($server['username'])
 			->setPassword($server['password']);
 		$mailer = Swift_Mailer::newInstance($transport);
 		$result = $mailer->send($message);
@@ -202,7 +202,7 @@ class EmailsController extends Controller
 			. ' subject=:subject, message_body=:message_body';
 		$insert = $this->db->prepare($sql);
 		$insert->bindParam(':from', $mainUser['id']);
-		$insert->bindParam(':to', $with);
+		$insert->bindParam(':to', $to['id']);
 		$insert->bindParam(':date_and_time', date('Y-m-d H:i:s'));
 		$insert->bindParam(':subject', $_POST['subject']);
 		$insert->bindParam(':message_body', $_POST['message_body']);
@@ -211,7 +211,9 @@ class EmailsController extends Controller
 			exit(1);
 		}
 
-		header("Location:" . $_SERVER['PHP_SELF'] . "?with=$with&year=$year#reply-form");
+		$year = date('Y');
+		$url = $this->router->urlFor('home') . '?with='.$to['id'].'&year='.$year.'#last-email';
+		return $response->withRedirect($url);
 	}
 
 	protected function getEmails($with, $year)

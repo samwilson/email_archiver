@@ -2,13 +2,13 @@
 
 {% block content %}
 
-<p class='centre'>Showing {{ emails|length }} emails.</p>
+<p class='centre'>Showing {{ emails|length }} of {{ email_count }} emails.</p>
 
 {% for email in emails %}
 <div class="email {% if email.from_id == main_user_id %}from-me{% endif %}"
      {% if loop.last %}id="last-email"{% endif %}>
     <p>
-        <span class='from'>{{ attribute( people, email.from_id ) }}</span>
+        <span class='from'>{{ attribute( people, email.from_id ).name }}</span>,
         {% if not with %}(to {{ attribute( people, email.to_id ) }}){% endif %}
         {{ email.date_and_time|date('l, F jS, g:iA') }}
         <strong>{{ email.subject }}</strong>
@@ -56,7 +56,7 @@
 <ul class='columnar'>
     {% for person in people %}
         <li>
-            <a class='{{ person.css_class }}' href="{{ path_for('home') }}?with={{ person.id }}&year={{ person.most_recent_year }}#reply-form">
+            <a class='{{ person.css_class }}' href="{{ path_for('home') }}?with={{ person.id }}&year={{ person.most_recent_year }}#last-email">
                 {{ person.name }}
             </a>
         </li>

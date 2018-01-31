@@ -10,15 +10,17 @@
     </head>
     <body onload="onBodyLoad();">
         <div class="container">
-            {% if logged_in %}
-            <p class="centre noprint">
-                &bull; <a href="{{ path_for('home') }}">Emails</a>
-                &bull; <a href="{{ path_for('inbox') }}">Inbox</a>
-                &bull; <a href="{{ path_for('people') }}">People</a>
-                &bull; <a href="{{ path_for('logout') }}">Logout</a>
-                &bull;
-            </p>
-            {% endif %}
+            {% block nav %}
+                {% if logged_in %}
+                    <p class="centre noprint">
+                        &middot; <a href="{{ path_for('home') }}">Emails</a>
+                        &middot; <a href="{{ path_for('inbox') }}">Inbox</a>
+                        &middot; <a href="{{ path_for('people') }}">People</a>
+                        &middot; <a href="{{ path_for('logout') }}">Logout</a>
+                        &middot;
+                    </p>
+                {% endif %}
+            {% endblock %}
 
             {% if flash %}
                 <p class="flash notice message">{{ flash }}</p>
@@ -27,6 +29,8 @@
             <main id="content">
                 {% block content %}{% endblock %}
             </main>
+
+            {{ block('nav') }}
         </div>
         <script type="application/javascript" src="scripts.js"></script>
     </body>

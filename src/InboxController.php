@@ -2,8 +2,6 @@
 
 namespace Samwilson\EmailArchiver;
 
-use Fetch\Message;
-use Fetch\Server;
 use PhpImap\Mailbox;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -18,8 +16,9 @@ class InboxController extends Controller
 		// Give up if there's no messages.
 		$messageCount = $mailbox->countMails();
 		if ($messageCount === 0) {
-			$this->setFlash('No messages found');
-			return $response->withRedirect($this->router->urlFor('home'));
+			return $this->renderView($response, 'base.html.twig', [
+				'flash' => 'No messages found',
+			]);
 		}
 
 		// Get list of people.
@@ -31,7 +30,8 @@ class InboxController extends Controller
 
 		// Get message.
 		$mailId = 1;
-		$mail = $mailbox->getMail($mailId);
+		$uid = $mailbox->imap('uid', [ $mailId ]);
+		$mail = $mailbox->getMail($uid, false);
 
 		// Subject.
 		$subject = $mail->subject;
@@ -42,12 +42,11 @@ class InboxController extends Controller
 		}
 
 		// Sender and recipient.
-		$emailStmt = $this->db->prepare("SELECT id FROM people WHERE email_address LIKE :email_address");
+		$emailStmt = $this->db->prepare("SELECT id FROM people WHERE email_address = :email_address");
 
 		// Sender.
 		$fromId = 0;
-		$fromEmailAddress = '%' . $mail->fromAddress . '%';
-		$emailStmt->bindParam(':email_address', $fromEmailAddress);
+		$emailStmt->bindParam(':email_address', $mail->fromAddress);
 		$emailStmt->execute();
 		if ($fromPersonId = $emailStmt->fetchColumn()) {
 			$fromId = $fromPersonId;
@@ -55,7 +54,9 @@ class InboxController extends Controller
 
 		// Recipient.
 		$toId = MAIN_USER_ID;
-		$emailStmt->bindParam(':email_address', $fromEmailAddress);
+		$toAddresses = array_keys($mail->to);
+		$toAddress = array_shift($toAddresses);
+		$emailStmt->bindParam(':email_address', $toAddress);
 		$emailStmt->execute();
 		if ($toPersonId = $emailStmt->fetchColumn()) {
 			$toId = $toPersonId;
@@ -72,6 +73,7 @@ class InboxController extends Controller
 			'from_id' => $fromId,
 			'from_string' => $mail->fromName . '<' . $mail->fromAddress . '>',
 			'message_body' => trim($mail->textPlain),
+			'message_uid' => $mail->id,
 		]);
 	}
 
@@ -92,7 +94,7 @@ class InboxController extends Controller
 		) {
 			// Delete the email.
 			$mailbox = $this->getMailbox();
-			$mailbox->deleteMail($request->getParam('message_id'));
+			$mailbox->deleteMail($request->getParam('message_uid'));
 			$mailbox->expungeDeletedMails();
 		}
 		// Return to inbox.
