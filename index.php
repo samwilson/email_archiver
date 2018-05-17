@@ -6,6 +6,7 @@ use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DriverManager;
 use Samwilson\EmailArchiver\EmailsController;
 use Samwilson\EmailArchiver\InboxController;
+use Samwilson\EmailArchiver\LatexController;
 use Samwilson\EmailArchiver\PeopleController;
 use Samwilson\EmailArchiver\UserController;
 use Slim\App;
@@ -77,20 +78,23 @@ session_start();
 // Database.
 $container['db'] = function (Container $container) {
 	$config = new Configuration();
-	$connectionParams = array(
+	$connectionParams = [
 		'driver' => 'pdo_mysql',
 		'url' => $container['settings']['dbDsn'],
 		'port' => $container['settings']['dbPort'],
 		'user' => $container['settings']['dbUser'],
 		'password' => $container['settings']['dbPass'],
-	);
+	];
 	$conn = DriverManager::getConnection($connectionParams, $config);
+	$conn->exec('SET NAMES utf8');
 	return $conn;
 };
 
 // Routes.
 $app->get('/', EmailsController::class . ':home')->setName('home');
 $app->post('/send', EmailsController::class . ':send')->setName('send');
+$app->get('/emails/{id}/edit', EmailsController::class . ':edit')->setName('email_edit');
+$app->get('/{year}.tex', LatexController::class . ':home')->setName('latex');
 $app->get('/inbox', InboxController::class . ':inbox')->setName('inbox');
 $app->post('/inbox', InboxController::class . ':save')->setName('email_save');
 $app->get('/people', PeopleController::class . ':people')->setName('people');

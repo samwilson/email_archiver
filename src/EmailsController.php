@@ -24,7 +24,7 @@ class EmailsController extends Controller
 	public function home(Request $request, Response $response, $args)
 	{
 		$with = $request->getParam('with', false);
-		$mostRecentYear = $request->getParam('year', false);
+		$year = $request->getParam('year', false);
 
 		$mainUser = $this->db->query('SELECT * FROM people WHERE id = ' . MAIN_USER_ID);
 		$mainUser = $mainUser->fetch();
@@ -35,7 +35,7 @@ class EmailsController extends Controller
 		/*******************************************************************************
 		 * Get years.
 		 ******************************************************************************/
-		$years = array();
+		$years = [];
 		$res = $this->db->query("SELECT YEAR(date_and_time) AS year FROM emails GROUP BY year");
 		$res->execute();
 		foreach ($res->fetchAll() as $y) {
@@ -50,7 +50,7 @@ class EmailsController extends Controller
 		 * Get people
 		 ******************************************************************************/
 		$ppl = $this->db->query("SELECT id, name FROM people ORDER BY name ASC")->fetchAll();
-		$people = array();
+		$people = [];
 		foreach ($ppl as $person) {
 			$people[$person['id']] = $person['name'];
 		}
@@ -59,9 +59,9 @@ class EmailsController extends Controller
 		 * list emails
 		 ******************************************************************************/
 		$emails = [];
-		if ($mostRecentYear || $with) {
+		if ($year || $with) {
 			$sql = "SELECT * FROM emails WHERE YEAR(date_and_time) = :year ";
-			$params = [':year' => $mostRecentYear];
+			$params = [':year' => $year];
 			if ($with) {
 				$sql .= "AND (to_id = :with OR from_id = :with) ";
 				$params[':with'] = $with;
@@ -71,7 +71,6 @@ class EmailsController extends Controller
 			$emailsQuery->execute($params);
 			$emails = $emailsQuery->fetchAll();
 		}
-
 
 		/*******************************************************************************
 		 * reply form
@@ -108,7 +107,7 @@ class EmailsController extends Controller
 			if ($unanswered) { // If there is any last email.
 				$fromId = $unanswered['from_id'];
 				$to_id = $unanswered['to_id'];
-				$mostRecentYear = $unanswered['year'];
+				$y = $unanswered['year'];
 				// If the last email was incoming and not from the main user.
 				if ($fromId != MAIN_USER_ID) {
 					$cssClass = 'highlight';
@@ -125,7 +124,7 @@ class EmailsController extends Controller
 				$to_id = null;
 				//$year = null;
 			} else { // There was no last email.
-				$mostRecentYear = date('Y');
+				$y = date('Y');
 				//$with = $pid;
 				$cssClass = '';
 			}
@@ -133,7 +132,7 @@ class EmailsController extends Controller
 				'id' => $pid,
 				'name' => $name,
 				'css_class' => $cssClass,
-				'most_recent_year' => $mostRecentYear,
+				'most_recent_year' => $y,
 			];
 		}
 
@@ -146,7 +145,8 @@ class EmailsController extends Controller
 				'main_user_id' => MAIN_USER_ID,
 				'with' => $with,
 				'to' => $to,
-				'year' => $mostRecentYear,
+				'years' => $years,
+				'year' => $year,
 				'emails' => $emails,
 				'people' => $peopleInfo,
 				'email_count' => $emailCount,
