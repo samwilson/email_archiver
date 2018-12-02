@@ -24,7 +24,7 @@
                 <input type="hidden" name="year" value="<?php echo $year ?>" />
                 <input type="hidden" name="last_date" value="<?php echo $last_date ?>" />
                 <input type="hidden" name="year" value="<?php echo $year ?>" />
-                <?php if ($last_from_id != MAIN_USER_ID): ?>
+                <?php if ($last_from_id != MAIN_USER_ID) : ?>
                     <input type="hidden" name="last_body" value="<?php echo htmlentities($last_body) ?>" />
                 <?php endif ?>
             </td>

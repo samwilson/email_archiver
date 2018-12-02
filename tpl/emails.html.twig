@@ -3,9 +3,9 @@
 {% block content %}
 
 
-<p class="centre">Years:
-    {% for year in years %}
-        <a href="{{ path_for('home') }}?year={{ year }}">{{ year }}</a> &middot;
+<p class="centre years">Years:
+    {% for y in years %}
+        <a href="{{ path_for('home') }}?year={{ y }}" {% if y == year %}class="selected"{% endif %}>{{ y }}</a> &middot;
     {% endfor %}
 </p>
 <p class="centre">{{ latex|raw }}:
@@ -45,7 +45,7 @@
             <td><input type="text" name="subject" id="subject" value="{{ subject }}" size="80"/></td>
         </tr>
         <tr>
-            <td></td>
+            <th><label for="message_body">Message:</label></th>
             <td><textarea name="message_body" rows="24" cols="80"></textarea></td>
         </tr>
         <tr>
@@ -55,9 +55,6 @@
                 <input type="hidden" name="with" value="{{ with }}" />
                 <input type="hidden" name="year" value="{{ year }}" />
                 <input type="hidden" name="last_date" value="{{ last_date }}" />
-                {% if last_from_id == main_user_id %}
-                <input type="hidden" name="last_body" value="{{ last_body }}" />
-                {% endif %}
             </td>
         </tr>
     </table>

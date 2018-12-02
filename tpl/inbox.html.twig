@@ -33,7 +33,7 @@
                         </option>
                         {% endfor %}
                     </select>
-                    <a href='{{ path_for('person_new') }}?text={{ from_string}}' title="Create new person record">
+                    <a href='{{ path_for('person_new') }}?notes={{ from_string}}' title="Create new person record">
                         {{ from_string }}
                     </a>
                     ({{ from_id }})
@@ -49,7 +49,7 @@
                             </option>
                         {% endfor %}
                     </select>
-                    <a href='{{ path_for('person_new') }}?text={{ to_string }}' title="Create new person record">
+                    <a href='{{ path_for('person_new') }}?notes={{ to_string }}' title="Create new person record">
                         {{ to_string }}
                     </a>
                     ({{ to_id }})

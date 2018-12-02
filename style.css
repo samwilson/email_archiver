@@ -116,6 +116,7 @@ div.email {background-color:#eee; margin:1em; padding:1em}
 .from {font-variant:small-caps}
 .from.from-me {color:#060}
 
+.years .selected { border-bottom:1px solid #8a1f11 }
 
 a { text-decoration:none; }
 a:hover { text-decoration:underline; }

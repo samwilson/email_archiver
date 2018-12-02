@@ -3,7 +3,7 @@
 {% block content %}
 
 <h2>People</h2>
-<p><a href="{{ path_for('person_new') }}">[Add new]</a></p>
+<p class="noprint"><a href="{{ path_for('person_new') }}">[Add new]</a></p>
 <ol>
     {% for person in people %}
         <li>

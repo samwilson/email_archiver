@@ -1,35 +1,23 @@
 <?php
 
-// The title of the whole site.  Used in a bunch of places.  Or one, at least.
-define('SITETITLE', 'Email Archiver');
+// Show errors?
+$displayErrorDetails = false;
 
-// Hide all errors.  Set this to E_ALL if you're getting a blank screen and want
-// to know why; after you fixed whatever's wrong (usually database connection or
-// PEAR requirements) set it back to 0 so that no error messages are show to the
-// public.
-error_reporting(0);
+// Database. The DSN should be usable with PDO. See https://php.net/pdo
+$dbUser = 'email_archiver';
+$dbPass = 'correct horse battery staple';
+$dbDsn  = "mysql://localhost;dbname=email_archiver";
 
-// Timezone. For a list of valid timezones
-// see http://php.net/manual/en/function.date-default-timezone-set.php
-date_default_timezone_set('Time/Zone');
-
-// Database credentials.
-// The Data Source Name should be usable with PDO. See http://php.net/pdo
-$db_user = 'root';
-$db_pass = 'dev123dev';
-$dsn = "mysql:dbname=testdb;host=127.0.0.1";
-
-// If the system-wide copy of PEAR doesn't contain all we need, you might need
-// to install a local copy.  Enter the path to it here.
-set_include_path(get_include_path() . PATH_SEPARATOR . "/home/user/pear/php/");
-
-// Mail server information.
-$mail_server['suffix']      = '@example.org';
-$mail_server['imap_server'] = 'mail.example.org';
-$mail_server['imap_port']   = 143;
-$mail_server['smtp_server']   = 'mail.example.org';
-$mail_server['smtp_port']     = 587;
-$mail_server['inbox']       = 'INBOX.ToArchive';
+// Mail server.
+$mailServer['username']        = 'example@gmail.com';
+$mailServer['password']        = 'staple battery horse correct';
+$mailServer['imap_path']       = '{imap.gmail.com:993/imap/ssl}INBOX';
+$mailServer['smtp_server']     = 'smtp.gmail.com';
+$mailServer['smtp_port']       = 465;
+$mailServer['smtp_encryption'] = 'ssl';
 
 // The main user must have a person record; enter that record's ID here.
 define('MAIN_USER_ID', 1);
+
+// Main password to get into Email Archiver.
+$appPass = '$2y$10$vBTVifnmVKpLb/gwBx54TudGsxDvYFV3vS0kmUII5LZ3oeIBT3lW6';

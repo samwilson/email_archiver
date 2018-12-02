@@ -1,5 +1,6 @@
-function onBodyLoad() {
-	if (document.getElementById('password')) {
-		document.getElementById('password').focus();
-	}
+function onBodyLoad()
+{
+    if (document.getElementById('password')) {
+        document.getElementById('password').focus();
+    }
 }
