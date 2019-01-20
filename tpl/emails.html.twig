@@ -2,19 +2,17 @@
 
 {% block content %}
 
-
 <p class="centre years">Years:
     {% for y in years %}
         <a href="{{ path_for('home') }}?year={{ y }}" {% if y == year %}class="selected"{% endif %}>{{ y }}</a> &middot;
     {% endfor %}
 </p>
-<p class="centre">{{ latex|raw }}:
-    {% for year in years %}
-    <a href="{{ path_for('latex', {year: year}) }}">{{ year }}</a> &middot;
-{% endfor %}
-</p>
 
-<p class='centre'>Showing {{ emails|length }} of {{ email_count|number_format }} emails.</p>
+<p class='centre'>
+    Showing {{ emails|length|number_format }} of {{ email_count|number_format }} emails.
+    <a href="{{ path_for('latex', {year: year}) }}">Download {{ year }} as {{ latex|raw }}.</a>
+    Jump to <a href="#people">#people</a>
+</p>
 
 {% for email in emails %}
 <div class="email {% if email.from_id == main_user_id %}from-me{% endif %}"
@@ -61,15 +59,17 @@
 </form>
 {% endif %}
 
-<h2>People:</h2>
-<ul class='columnar'>
-    {% for person in people %}
-        <li>
-            <a class='{{ person.css_class }}' href="{{ path_for('home') }}?with={{ person.id }}&year={{ person.most_recent_year }}#last-email">
-                {{ person.name }}
-            </a>
-        </li>
-    {% endfor %}
-</ul>
+<section id="people">
+    <h2>People:</h2>
+    <ul class='columnar'>
+        {% for person in people %}
+            <li>
+                <a class='{{ person.css_class }}' href="{{ path_for('home') }}?with={{ person.id }}&year={{ person.most_recent_year }}#last-email">
+                    {{ person.name }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</section>
     
 {% endblock %}

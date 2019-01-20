@@ -167,7 +167,8 @@ class EmailsController extends Controller
      * The POST endpoint for sending email.
      * @param Request $request
      * @param Response $response
-     * @param $args
+     * @param string[] $args
+     * @return Response
      */
     public function send(Request $request, Response $response, $args)
     {
@@ -183,11 +184,12 @@ class EmailsController extends Controller
         $lastEmail = $lastEmailQuery->fetch();
         if ($lastEmail) {
             $body .= "\n\n
--------- Previous message --------
--- Date: " . $lastEmail['date_and_time'] . "
--- From: " . $to['name'] . " <" . $to['email_address'] . ">
---   To: " . $mainUser['name'] . " <" . $mainUser['email_address'] . ">
-----------------------------------
+---------- Previous message ----------
+--    Sender: " . $to['name'] . " <" . $to['email_address'] . ">
+-- Recipient: " . $mainUser['name'] . " <" . $mainUser['email_address'] . ">
+--      Date: " . $lastEmail['date_and_time'] . "
+--   Subject: " . $lastEmail['subject'] . "
+--------------------------------------
 
 " . wordwrap($lastEmail['message_body'], 78) . "
 
@@ -233,7 +235,7 @@ class EmailsController extends Controller
         return $response->withRedirect($url);
     }
 
-    protected function getEmails($with, $year)
+    /*protected function getEmails($with, $year)
     {
         $sql = "SELECT * FROM emails WHERE YEAR(date_and_time)=:year ";
         $params = [':year' => $year];
@@ -282,5 +284,5 @@ class EmailsController extends Controller
             $page->addBodyContent("<p class='centre'>Showing " . count($emails) . " emails.</p>");
         }
         return $email;
-    }
+    }*/
 }
