@@ -36,7 +36,7 @@ class EmailsController extends Controller
          * Get years.
          ******************************************************************************/
         $years = [];
-        $res = $this->db->query("SELECT YEAR(date_and_time) AS year FROM emails GROUP BY year");
+        $res = $this->db->query("SELECT YEAR(`date_and_time`) AS `year` FROM `emails` GROUP BY `year`");
         $res->execute();
         foreach ($res->fetchAll() as $y) {
             $years[$y['year']] = $y['year'];
@@ -44,7 +44,6 @@ class EmailsController extends Controller
         if (count($years) == 0) {
             //echo "<p>Nothing found.</p>";
         }
-
 
         /*******************************************************************************
          * Get people
@@ -90,7 +89,7 @@ class EmailsController extends Controller
                 } else {
                     $subject = $lastSubject;
                 }
-                if ((int)$lastEmail['from'] !== MAIN_USER_ID) {
+                if ((int)$lastEmail['from_id'] !== MAIN_USER_ID) {
                     $lastBody = $lastEmail['message_body'];
                 }
             }
@@ -112,34 +111,17 @@ class EmailsController extends Controller
             $unanswered = $unanswered->fetch();
 
             if ($unanswered) { // If there is any last email.
-                $fromId = $unanswered['from_id'];
-                $to_id = $unanswered['to_id'];
-                $y = $unanswered['year'];
-                // If the last email was incoming and not from the main user.
-                if ($fromId != MAIN_USER_ID) {
-                    $cssClass = 'highlight';
-                    //$with = $from_id;
-                    //$page->addBodyContent("<li><strong><a style='color:red' href='?with={$from_id}&year={$year}#reply-form'>$name</a></strong></li>");
-                } else {
-                    //$with = $to_id;
-                    $cssClass = '';
-                    //$page->addBodyContent("<li><a href='?with={$to_id}&year={$year}#reply-form'>$name</a></li>");
-                    //} elseif () {
-                    //$page->addBodyContent("<li><a href='?with=$pid&year=".date('Y')."#reply-form'>$name</a></li>");
-                }
-                $fromId = null;
-                $to_id = null;
-                //$year = null;
+                $mostRecentYear = $unanswered['year'];
+                $cssClass = (int)$unanswered['from_id'] !== MAIN_USER_ID ? 'highlight' : '';
             } else { // There was no last email.
-                $y = date('Y');
-                //$with = $pid;
+                $mostRecentYear = date('Y');
                 $cssClass = '';
             }
             $peopleInfo[$pid] = [
                 'id' => $pid,
                 'name' => $name,
                 'css_class' => $cssClass,
-                'most_recent_year' => $y,
+                'most_recent_year' => $mostRecentYear,
             ];
         }
 

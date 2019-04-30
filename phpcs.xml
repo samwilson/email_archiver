@@ -5,5 +5,5 @@
     <exclude-pattern>vendor/</exclude-pattern>
     <exclude-pattern>var/</exclude-pattern>
     <exclude-pattern>docs/</exclude-pattern>
-    <exclude-pattern>config.php</exclude-pattern>
+    <exclude-pattern>config*.php</exclude-pattern>
 </ruleset>

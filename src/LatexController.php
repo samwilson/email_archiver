@@ -21,7 +21,7 @@ class LatexController extends Controller
         }
 
         // Start LaTeX output.
-        $latex = "\documentclass{book}\n\n"
+        $latex = "\documentclass{book}\n"
             ."\\usepackage[a4paper,margin=2cm]{geometry}\n"
             ."\\usepackage[T1]{fontenc}\n"
             ."\\usepackage{alltt}\n"
@@ -31,7 +31,7 @@ class LatexController extends Controller
             ."\setlength{\parindent}{0cm}\n"
             ."\begin{document}\n"
             ."\maketitle\n"
-            ."\\tableofcontents";
+            ."\\tableofcontents\n";
         foreach ($people as $person_id => $person_name) {
             $sql = 'SELECT id, from_id, to_id, subject, date_and_time, message_body
                 FROM emails
@@ -55,7 +55,7 @@ class LatexController extends Controller
             }
         }
 
-        $latex .= '\end{document}';
+        $latex .= "\\end{document}\n";
         $response->getBody()->write($latex);
         return $response->withHeader('Content-Type', 'text/plain;charset=utf-8');
     }

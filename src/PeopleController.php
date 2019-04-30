@@ -18,7 +18,8 @@ class PeopleController extends Controller
         }
         $id = $request->getParam('id', false);
         if ($id) {
-            $save = $this->db->prepare('UPDATE people SET name=:name, email_address=:email_address, notes=:notes WHERE id=:id');
+            $sql = 'UPDATE `people` SET `name`=:name, `email_address`=:email_address, `notes`=:notes WHERE `id`=:id';
+            $save = $this->db->prepare($sql);
             $save->bindParam(':id', $id);
         } else {
             $save = $this->db->prepare('INSERT INTO people SET name=:name, email_address=:email_address, notes=:notes');

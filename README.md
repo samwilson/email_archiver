@@ -12,15 +12,15 @@ Installation
 The database has the following structure:
 
     CREATE TABLE IF NOT EXISTS `emails` (
-        id int(10) NOT NULL AUTO_INCREMENT,
-        to_id int(11) NOT NULL,
-        from_id int(11) NOT NULL,
-        date_and_time datetime DEFAULT NULL,
+        `id` int(10) NOT NULL AUTO_INCREMENT,
+        `to_id` int(11) NOT NULL,
+        `from_id` int(11) NOT NULL,
+        `date_and_time` datetime DEFAULT NULL,
         `subject` varchar(200) CHARACTER SET utf8mb4 NOT NULL,
-        message_body text CHARACTER SET utf8mb4,
-        PRIMARY KEY (id),
-        KEY to_id (to_id),
-        KEY from_id (from_id)
+        `message_body` text CHARACTER SET utf8mb4,
+        PRIMARY KEY (`id`),
+        KEY to_id (`to_id`),
+        KEY from_id (`from_id`)
     ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4;
 
     CREATE TABLE IF NOT EXISTS `people` (
@@ -28,7 +28,7 @@ The database has the following structure:
         `name` varchar(150) CHARACTER SET utf8mb4 NOT NULL,
         `email_address` varchar(100) CHARACTER SET utf8mb4 NOT NULL,
         `notes` text CHARACTER SET utf8mb4 NULL DEFAULT NULL,
-        PRIMARY KEY (id),
+        PRIMARY KEY (`id`),
         UNIQUE KEY `name` (`name`)
     ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4;
 

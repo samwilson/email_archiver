@@ -81,7 +81,12 @@ class InboxController extends Controller
     {
         if ($request->getParam('save')) {
             // Save the email.
-            $sql = 'INSERT INTO emails SET date_and_time=:date_and_time, subject=:subject, from_id=:from_id, to_id=:to_id, message_body=:message_body';
+            $sql = 'INSERT INTO `emails` SET'
+                .' `date_and_time` = :date_and_time,'
+                .' `subject`       = :subject,'
+                .' `from_id`       = :from_id,'
+                .' `to_id`         = :to_id,'
+                .' `message_body`  = :message_body';
             $save = $this->db->prepare($sql);
             $save->bindParam(':date_and_time', $request->getParam('date_and_time'));
             $save->bindParam(':subject', $request->getParam('subject'));
