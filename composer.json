@@ -1,7 +1,7 @@
 {
     "name": "samwilson/email_archiver",
     "description": "A simple (and probably useless to most people) system for archiving plain-text emails and producing annual LaTeX-formatted concatenations of same.",
-    "license": "GPL-3.0+",
+    "license": "GPL-3.0-or-later",
     "authors": [
         {
             "name": "Sam Wilson",
@@ -18,13 +18,14 @@
         "slim/slim": "^3.0",
         "slim/twig-view": "^2.2",
         "twig/twig": "^2.9",
-        "bryanjhv/slim-session": "^3.0",
+        "bryanjhv/slim-session": "^3.6",
         "swiftmailer/swiftmailer": "^5.0",
         "doctrine/dbal": "^2.5",
         "php-imap/php-imap": "^3.0"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^3.2",
+        "mediawiki/minus-x": "^0.3",
         "symfony/var-dumper": "^3.3"
     },
     "config": {
@@ -41,6 +42,11 @@
         ],
         "post-update-cmd": [
             "composer mkconfig"
+        ],
+        "test": [
+            "composer validate",
+            "phpcs -s .",
+            "minus-x check ."
         ]
     }
 }

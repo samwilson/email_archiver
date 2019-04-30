@@ -14,6 +14,7 @@ use Slim\Container;
 use Slim\Middleware\Session;
 use Slim\Views\Twig;
 use Slim\Views\TwigExtension;
+use SlimSession\Helper;
 
 // Set up configuration.
 $configFilename = __DIR__ . '/config.php';
@@ -66,14 +67,14 @@ $container['view'] = function (Container $container) {
 };
 
 // Session.
-session_start();
-//$container['session'] = function (Container $container) {
-//  return new Session([
-//      'name' => 'email_archiver',
-//      'autorefresh' => true,
-//      'lifetime' => '12 hour'
-//  ]);
-//};
+$app->add(new Session([
+    'name' => 'email_archiver',
+    'autorefresh' => true,
+    'lifetime' => '1 day'
+]));
+$container['session'] = function () {
+    return new Helper;
+};
 
 // Database.
 $container['db'] = function (Container $container) {

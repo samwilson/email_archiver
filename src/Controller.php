@@ -36,6 +36,7 @@ abstract class Controller
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
+        $this->session = $container->get('session');
         $this->view = $container->get('view');
         $this->db = $container->get('db');
         $this->router = $container->get('router');
