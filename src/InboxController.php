@@ -71,7 +71,7 @@ class InboxController extends Controller
             'to_id' => $toId,
             'to_string' => $mail->toString,
             'from_id' => $fromId,
-            'from_string' => $mail->fromName . '<' . $mail->fromAddress . '>',
+            'from_string' => $mail->fromName . ' <' . $mail->fromAddress . '>',
             'message_body' => trim($mail->textPlain),
             'message_uid' => $mail->id,
         ]);

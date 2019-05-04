@@ -1,5 +1,6 @@
-/config.php
-/vendor
-/.idea
-/var
+config.php
+vendor/
+.idea/
+var/
+!var/.gitkeep
 

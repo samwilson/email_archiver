@@ -40,6 +40,8 @@ Create a password and add it to `config.php`:
 
     $ php -r "echo password_hash('y0urpwd123!', PASSWORD_DEFAULT).PHP_EOL;"
 
+Make sure the webserver user can write to `var/`.
+
 Licence
 -------
 
