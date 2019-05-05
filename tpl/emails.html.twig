@@ -15,13 +15,14 @@
 </p>
 
 {% for email in emails %}
-<div class="email {% if email.from_id == main_user_id %}from-me{% endif %}"
+<div class="email {% if email.from_id == main_user_id %}from-me{% endif %}" id="email-{{ email.id }}"
      {% if loop.last %}id="last-email"{% endif %}>
     <p>
         <span class='from'>{{ attribute( people, email.from_id ).name }}</span>{#
         #}{% if not with %} (to {{ attribute( people, email.to_id ).name }}){% endif %},
         {{ email.date_and_time|date('l, F jS, g:iA') }}
         <strong>{{ email.subject }}</strong>
+        <a class="edit" href="{{ path_for('email_edit', {id: email.id}) }}">[Edit]</a>
     </p>
     <pre>{{ email.message_body|wordwrap(78) }}</pre>
 </div>

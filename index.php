@@ -95,6 +95,7 @@ $container['db'] = function (Container $container) {
 $app->get('/', EmailsController::class . ':home')->setName('home');
 $app->post('/send', EmailsController::class . ':send')->setName('send');
 $app->get('/emails/{id}/edit', EmailsController::class . ':edit')->setName('email_edit');
+$app->post('/emails/save', EmailsController::class . ':save')->setName('email_save');
 $app->get('/{year}.tex', LatexController::class . ':home')->setName('latex');
 $app->get('/inbox', InboxController::class . ':inbox')->setName('inbox');
 $app->post('/inbox', InboxController::class . ':save')->setName('email_save');

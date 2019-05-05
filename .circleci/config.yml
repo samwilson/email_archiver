@@ -1,0 +1,24 @@
+version: 2
+jobs:
+  build:
+
+    docker:
+      - image: circleci/php:7.2-browsers
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install PHP IMAP extension
+          command: |
+            sudo apt install libc-client-dev libkrb5-dev
+            sudo docker-php-ext-configure imap --with-kerberos --with-imap-ssl
+            sudo docker-php-ext-install imap
+
+      - run:
+          name: Install
+          command: composer install
+
+      - run:
+          name: Test
+          command: composer test

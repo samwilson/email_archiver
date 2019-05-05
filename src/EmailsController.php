@@ -2,6 +2,7 @@
 
 namespace Samwilson\EmailArchiver;
 
+use DateTime;
 use Exception;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -21,13 +22,23 @@ class EmailsController extends Controller
         return $person;
     }
 
+    protected function getPeople()
+    {
+        $peopleData = $this->db->query('SELECT `id`, `name` FROM `people` ORDER BY `name` ASC')
+            ->fetchAll();
+        $people = [];
+        foreach ($peopleData as $person) {
+            $people[$person['id']] = $person['name'];
+        }
+        return $people;
+    }
+
     public function home(Request $request, Response $response, $args)
     {
         $with = $request->getParam('with', false);
         $year = $request->getParam('year', false);
 
-        $mainUser = $this->db->query('SELECT * FROM people WHERE id = ' . MAIN_USER_ID);
-        $mainUser = $mainUser->fetch();
+        $mainUser = $this->getPerson(MAIN_USER_ID);
         if (!$mainUser) {
             throw new Exception("Main user not found");
         }
@@ -48,11 +59,7 @@ class EmailsController extends Controller
         /*******************************************************************************
          * Get people
          ******************************************************************************/
-        $ppl = $this->db->query("SELECT id, name FROM people ORDER BY name ASC")->fetchAll();
-        $people = [];
-        foreach ($ppl as $person) {
-            $people[$person['id']] = $person['name'];
-        }
+        $people = $this->getPeople();
 
         /*******************************************************************************
          * list emails
@@ -217,54 +224,45 @@ class EmailsController extends Controller
         return $response->withRedirect($url);
     }
 
-    /*protected function getEmails($with, $year)
+    public function edit(Request $request, Response $response, $args)
     {
-        $sql = "SELECT * FROM emails WHERE YEAR(date_and_time)=:year ";
-        $params = [':year' => $year];
-        if ($with) {
-            $sql .= "AND (to_id = :with OR from_id = :with) ";
-            $params[':with'] = $with;
-        }
-        $sql .= "ORDER BY date_and_time ASC";
+        $sql = 'SELECT `id`, `from_id`, `to_id`, `date_and_time`, `subject`, `message_body`'
+            .' FROM `emails`'
+            .' WHERE `id` = :id LIMIT 1';
+        $emailStmt = $this->db->prepare($sql);
+        $emailStmt->bindValue('id', (int)$args['id']);
+        $emailStmt->execute();
+        $email = $emailStmt->fetch();
+        return $this->renderView(
+            $response,
+            'email_form.html.twig',
+            [
+                'email' => $email,
+                'people' => $this->getPeople(),
+            ]
+        );
+    }
 
-        $emails = $this->db->prepare($sql);
-        $emails->execute($params);
-        $emails = $emails->fetchAll();
-        $last_subject = '';
-        $last_body = '';
-        $last_date = '';
-        $last_from_id = '';
-
-        if (count($emails) > 0) {
-            foreach ($emails as $count => $email) {
-                $email_class = ($email['from_id'] == MAIN_USER_ID) ? 'from-me' : '';
-                $page->addBodyContent("<div class='email $email_class'><p>");
-                if ($count == count($emails) - 1) {
-                    $page->addBodyContent("<a name='reply-form'></a>");
-                }
-                $page->addBodyContent("
-                <span class='from $email_class'>" . $people[$email['from_id']] . "</span>
-            ");
-                if (!$with) {
-                    $page->addBodyContent(" (to " . $people[$email['to_id']] . ") ");
-                }
-                $page->addBodyContent(
-                    date('l, F jS, g:iA', strtotime($email['date_and_time'])) . "
-                    &nbsp;&nbsp;
-                    <strong>" . $email['subject'] . "</strong> &nbsp;&nbsp;
-                    <!--span class='small quiet'>
-                      <a href='?table_name=emails&edit&id=" . $email['id'] . "'>[e]</a>
-                      <del><a href='?table_name=emails&delete&id=" . $email['id'] . "'>[d]</a></del>
-                    </span-->
-                    </p><pre>" . trim(wordwrap(htmlentities($email['message_body']), 78)) . "</pre></div>"
-                );
-                $last_subject = $email['subject'];
-                $last_body = $email['message_body'];
-                $last_date = $email['date_and_time'];
-                $last_from_id = $email['from_id'];
-            }
-            $page->addBodyContent("<p class='centre'>Showing " . count($emails) . " emails.</p>");
-        }
-        return $email;
-    }*/
+    public function save(Request $request, Response $response, $args)
+    {
+        $sql = 'UPDATE `emails` SET'
+            .' `from_id` = :from_id, `to_id` = :to_id, `date_and_time` = :date_and_time,'
+            .' `subject` = :subject, `message_body` = :message_body'
+            .' WHERE `id` = :id';
+        $save = $this->db->prepare($sql);
+        $id = (int)$request->getParam('id');
+        $date = $request->getParam('date_and_time');
+        $fromId = $request->getParam('from_id');
+        $toId = $request->getParam('to_id');
+        $save->bindParam(':date_and_time', $date);
+        $save->bindParam(':subject', $request->getParam('subject'));
+        $save->bindParam(':from_id', $fromId);
+        $save->bindParam(':to_id', $toId);
+        $save->bindParam(':message_body', $request->getParam('message_body'));
+        $save->bindParam(':id', $id);
+        $save->execute();
+        $year = (new DateTime($date))->format('Y');
+        $with = $fromId == MAIN_USER_ID ? $toId : $fromId;
+        return $response->withRedirect($this->router->urlFor('home').'?with='.$with.'&year='.$year.'#email-'.$id);
+    }
 }

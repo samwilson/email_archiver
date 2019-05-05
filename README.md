@@ -5,6 +5,7 @@ Email Archiver is a simple email archiving database and web interface.
 
 * **Homepage:** https://samwilson.id.au/email_archiver
 * **Source code:** https://github.com/samwilson/email_archiver
+* CircleCI: [![CircleCI](https://circleci.com/gh/samwilson/email_archiver.svg)](https://circleci.com/gh/samwilson/email_archiver)
 
 Installation
 ------------
