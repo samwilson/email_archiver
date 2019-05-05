@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+<h2>Emails</h2>
+
+<div class='noprint'>
+    <form action="{{ path_for('email_save', {id: email.id}) }}" method="post">
+        <table>
+            <tr>
+                <th><label for="from_id">From:</label></th>
+                <td>
+                    <select name="from_id" id="from_id">
+                        {% for pid,pname in people %}
+                            <option value="{{ pid }}" {% if pid == email.from_id %}selected{% endif %}>
+                                {{ pname }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="to_id">To:</label></th>
+                <td>
+                    <select name="to_id" id="to_id">
+                        {% for pid,pname in people %}
+                            <option value="{{ pid }}" {% if pid == email.to_id %}selected{% endif %}>
+                                {{ pname }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="date_and_time">Date and time:</label></th>
+                <td><input type="text" name="date_and_time" id="date_and_time" value="{{ email.date_and_time }}" size="20" /></td>
+            </tr>
+            <tr>
+                <th><label for="subject">Subject:</label></th>
+                <td><input type="text" name="subject" id="subject" value="{{ email.subject }}" size="80"/></td>
+            </tr>
+            <tr>
+                <th><label for="message_body">Body:</label></th>
+                <td><textarea name="message_body" id="message_body" rows="24" cols="80">{{ email.message_body }}</textarea></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <input type="submit" name="save" value="Save" />
+                    <input type="hidden" name="id" value="{{ email.id }}" />
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+
+{% endblock %}
