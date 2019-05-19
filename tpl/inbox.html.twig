@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class='span-24 last'>
-    <form action="{{ path_for('email_save') }}" method="post" id="inbox-form" class="vertical">
+    <form action="{{ path_for('inbox_save') }}" method="post" id="inbox-form" class="vertical">
         <table>
             <caption>
                 {{ message_count|number_format }} message{% if message_count > 1 %}s{% endif %} remaining to be archived.

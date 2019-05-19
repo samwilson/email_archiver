@@ -98,7 +98,7 @@ $app->get('/emails/{id}/edit', EmailsController::class . ':edit')->setName('emai
 $app->post('/emails/save', EmailsController::class . ':save')->setName('email_save');
 $app->get('/{year}.tex', LatexController::class . ':home')->setName('latex');
 $app->get('/inbox', InboxController::class . ':inbox')->setName('inbox');
-$app->post('/inbox', InboxController::class . ':save')->setName('email_save');
+$app->post('/inbox', InboxController::class . ':save')->setName('inbox_save');
 $app->get('/people', PeopleController::class . ':people')->setName('people');
 $app->get('/people/new', PeopleController::class . ':edit')->setName('person_new');
 $app->get('/people/{id}/edit', PeopleController::class . ':edit')->setName('person_edit');

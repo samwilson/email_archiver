@@ -88,11 +88,11 @@ class InboxController extends Controller
                 .' `to_id`         = :to_id,'
                 .' `message_body`  = :message_body';
             $save = $this->db->prepare($sql);
-            $save->bindParam(':date_and_time', $request->getParam('date_and_time'));
-            $save->bindParam(':subject', $request->getParam('subject'));
-            $save->bindParam(':from_id', $request->getParam('from_id'));
-            $save->bindParam(':to_id', $request->getParam('to_id'));
-            $save->bindParam(':message_body', $request->getParam('message_body'));
+            $save->bindValue(':date_and_time', $request->getParam('date_and_time'));
+            $save->bindValue(':subject', $request->getParam('subject'));
+            $save->bindValue(':from_id', $request->getParam('from_id'));
+            $save->bindValue(':to_id', $request->getParam('to_id'));
+            $save->bindValue(':message_body', $request->getParam('message_body'));
             $save->execute();
         }
         if (($request->getParam('save') && $request->getParam('save') == 'Archive + Delete')
